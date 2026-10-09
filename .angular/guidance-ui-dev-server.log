@@ -1,0 +1,36 @@
+> Building...
+√ Building...
+Initial chunk files | Names                               |  Raw size
+styles.css          | styles                              |  41.78 kB | 
+main.js             | main                                |   6.64 kB | 
+chunk-Y36JMTZB.js   | -                                   |   5.55 kB | 
+chunk-VUJOFXKG.js   | -                                   | 938 bytes | 
+chunk-WZV6KATJ.js   | -                                   | 798 bytes | 
+chunk-FH2VPAWC.js   | -                                   | 157 bytes | 
+
+                    | Initial total                       |  55.87 kB
+
+Lazy chunk files    | Names                               |  Raw size
+chunk-6PZUAY5M.js   | admin-academics                     | 115.59 kB | 
+chunk-RAW4DKWY.js   | guidance-faculty-performance-detail |  93.45 kB | 
+chunk-SS5B6IMD.js   | dean-class-detail                   |  75.98 kB | 
+chunk-N3V73NYO.js   | dean-classes-workspace              |  69.34 kB | 
+chunk-7SX5W5C6.js   | admin-evaluations                   |  64.08 kB | 
+chunk-FMLPTPYN.js   | guidance-dashboard                  |  64.05 kB | 
+chunk-DBZUDLPR.js   | admin-users                         |  56.94 kB | 
+chunk-QDBYAOJR.js   | guidance-rosters                    |  54.86 kB | 
+chunk-HJVQKFBG.js   | dean-dashboard                      |  51.82 kB | 
+chunk-SVBQVXFJ.js   | instructor-classes-workspace        |  51.44 kB | 
+chunk-NK4PWYTG.js   | -                                   |  47.33 kB | 
+chunk-WEHOOFGI.js   | admin-evaluation-form-detail        |  42.37 kB | 
+chunk-NIT4KKVV.js   | guidance-faculty-performance        |  37.45 kB | 
+chunk-EV7PEKXQ.js   | student-masterlist                  |  32.70 kB | 
+chunk-Q2F4JFVI.js   | instructor-class-detail             |  28.23 kB | 
+...and 34 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [4.561 seconds] - 2026-10-09T01:06:57.671Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  ➜  Local:   http://127.0.0.1:4200/
+  ➜  press h + enter to show help
