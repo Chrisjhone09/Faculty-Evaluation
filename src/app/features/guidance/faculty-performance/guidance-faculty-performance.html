@@ -1,0 +1,205 @@
+<app-page-header
+  title="Faculty Performance"
+  description="Evaluation results across departments."
+/>
+
+@if (errorMessage()) {
+  <div class="banner-error">
+    <app-icon name="alert-circle" size="sm" />
+    <div class="alert-body">{{ errorMessage() }}</div>
+  </div>
+}
+
+<div class="tabs" role="tablist">
+  <button
+    type="button"
+    class="tab"
+    role="tab"
+    [class.active]="activeTab() === 'all'"
+    [attr.aria-selected]="activeTab() === 'all'"
+    (click)="selectTab('all')"
+  >
+    All faculty
+    <span class="tab-count">{{ rows().length }}</span>
+  </button>
+  <button
+    type="button"
+    class="tab"
+    role="tab"
+    [class.active]="activeTab() === 'flagged'"
+    [attr.aria-selected]="activeTab() === 'flagged'"
+    (click)="selectTab('flagged')"
+  >
+    Flagged
+    @if (flaggedCount() > 0) {
+      <span class="tab-count is-alert">{{ flaggedCount() }}</span>
+    }
+  </button>
+</div>
+
+@if (activeTab() === 'flagged' && !loading()) {
+  <div class="banner-warning">
+    <app-icon name="alert-triangle" size="sm" />
+    <div class="alert-body">
+      Instructors averaging at or below <strong>3.0 / 5</strong>, or <strong>7.0 / 10</strong> on Rapid Appraisal.
+      Flagging only runs once an instructor clears the anonymity threshold.
+    </div>
+  </div>
+}
+
+<div class="card card-flush">
+  <div class="toolbar">
+    <app-table-search
+      [value]="table.search()"
+      placeholder="Search faculty or department…"
+      (changed)="table.setSearch($event)"
+    />
+
+    <select
+      class="select"
+      aria-label="Filter by department"
+      [value]="selectedDepartmentId()"
+      (change)="onDepartmentChange($event)"
+    >
+      <option value="">All departments</option>
+      @for (department of departments(); track department.id) {
+        <option [value]="department.id">{{ department.name }}</option>
+      }
+    </select>
+
+    @if (hasActiveFilters()) {
+      <button type="button" class="btn btn-ghost btn-sm" (click)="clearFilters()">
+        <app-icon name="x" size="sm" />
+        Clear
+      </button>
+    }
+
+    <span class="spacer"></span>
+    <span class="toolbar-count">{{ table.filteredCount() }} of {{ rows().length }}</span>
+  </div>
+
+  @if (loading()) {
+    <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading faculty…</p>
+  } @else if (table.filteredCount() === 0) {
+    <app-empty-state
+      [icon]="activeTab() === 'flagged' ? 'check-circle' : 'search'"
+      [title]="activeTab() === 'flagged' && !hasActiveFilters() ? 'No flagged faculty' : 'No matches'"
+      [message]="
+        activeTab() === 'flagged' && !hasActiveFilters()
+          ? 'Nobody is currently below the rating thresholds. This list updates as new evaluations come in.'
+          : 'No faculty match the current search and filters.'
+      "
+    >
+      @if (hasActiveFilters()) {
+        <button type="button" class="btn btn-sm" (click)="clearFilters()">Clear filters</button>
+      }
+    </app-empty-state>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table data-table-stack">
+        <thead>
+          <tr>
+            <th>
+              <app-sort-header
+                label="Instructor"
+                [direction]="table.sortDirectionFor('name')"
+                (toggled)="table.toggleSort('name')"
+              />
+            </th>
+            <th>
+              <app-sort-header
+                label="Department"
+                [direction]="table.sortDirectionFor('department')"
+                (toggled)="table.toggleSort('department')"
+              />
+            </th>
+            <th class="cell-numeric">
+              <app-sort-header
+                label="Responses"
+                [direction]="table.sortDirectionFor('submitted')"
+                (toggled)="table.toggleSort('submitted')"
+              />
+            </th>
+            <th class="cell-numeric">
+              <app-sort-header
+                label="Rating"
+                [direction]="table.sortDirectionFor('rating')"
+                (toggled)="table.toggleSort('rating')"
+              />
+            </th>
+            <th class="cell-numeric">
+              <app-sort-header
+                label="Rapid Appraisal"
+                [direction]="table.sortDirectionFor('rapid')"
+                (toggled)="table.toggleSort('rapid')"
+              />
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of table.rows(); track row.instructorId) {
+            <tr [class.row-warning]="row.isFlagged">
+              <td data-label="Instructor">
+                <div class="row" style="gap: var(--space-2);">
+                  <div>
+                    <div class="cell-primary">{{ row.instructorName }}</div>
+                    <div class="cell-meta">{{ row.employeeNumber }}</div>
+                  </div>
+                  @if (row.isFlagged) {
+                    <span class="badge badge-warning">
+                      <app-icon name="flag" size="sm" />
+                      Flagged
+                    </span>
+                  }
+                </div>
+              </td>
+              <td data-label="Department">{{ row.departmentName }}</td>
+              <td data-label="Responses" class="cell-numeric">{{ row.evaluationsSubmittedCount }}</td>
+              <td data-label="Rating" class="cell-numeric">
+                @if (row.meetsAnonymityThreshold && row.averageRating !== null) {
+                  <span class="font-semibold">{{ row.averageRating }}</span
+                  ><span class="text-muted"> / 5</span>
+                } @else if (row.hasEvaluationData) {
+                  <span class="text-subtle text-xs">
+                    Scores protected
+                  </span>
+                } @else {
+                  <span class="text-subtle">&mdash;</span>
+                }
+              </td>
+              <td data-label="Rapid Appraisal" class="cell-numeric">
+                @if (row.meetsAnonymityThreshold && row.rapidAppraisalAverageRating !== null) {
+                  <span class="font-semibold">{{ row.rapidAppraisalAverageRating }}</span
+                  ><span class="text-muted"> / 10</span>
+                } @else {
+                  <span class="text-subtle">&mdash;</span>
+                }
+              </td>
+              <td class="cell-actions">
+                @if (row.hasEvaluationData) {
+                  <a class="btn btn-sm" [routerLink]="['/guidance/faculty', row.instructorId]">
+                    {{ row.meetsAnonymityThreshold ? 'View results' : 'View feedback' }}
+                    <app-icon name="chevron-right" size="sm" />
+                  </a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination
+      [page]="table.page()"
+      [pageCount]="table.pageCount()"
+      [rangeStart]="table.rangeStart()"
+      [rangeEnd]="table.rangeEnd()"
+      [filteredCount]="table.filteredCount()"
+      itemLabel="instructor"
+      itemLabelPlural="instructors"
+      (next)="table.nextPage()"
+      (previous)="table.previousPage()"
+    />
+  }
+</div>

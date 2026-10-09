@@ -1,0 +1,191 @@
+<a [routerLink]="workspaceRoot + '/evaluations'" [queryParams]="{ tab: 'forms' }" class="back-link">
+  ← Back to evaluation forms
+</a>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (form(); as f) {
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem;">
+    <div>
+      <h1 style="display: flex; align-items: center; gap: 0.6rem;">
+        {{ f.name }}
+        @if (f.isActive) {
+          <span class="badge badge-success">Active</span>
+        } @else {
+          <span class="badge badge-muted">Inactive</span>
+        }
+      </h1>
+      @if (f.description) {
+        <p style="color: var(--color-text-muted); margin: 0;">{{ f.description }}</p>
+      }
+    </div>
+    <button type="button" class="btn btn-sm" (click)="openEditForm()">Edit details</button>
+  </div>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+    <h3 style="margin: 0;">Categories & questions</h3>
+    <button type="button" class="btn btn-sm btn-primary" (click)="openAddCategory()">+ Add category</button>
+  </div>
+
+  @if (f.categories.length === 0) {
+    <div class="card">
+      <p class="empty-state">No categories yet. Add one to start building this form.</p>
+    </div>
+  } @else {
+    @for (category of f.categories; track category.id) {
+      <div class="card" style="margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+          <h4 style="margin: 0;">{{ category.name }} <span class="hint" style="color: var(--color-text-subtle); font-weight: 400;">(order {{ category.displayOrder }})</span></h4>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-sm" (click)="openAddQuestion(category)">+ Add question</button>
+            <button type="button" class="btn btn-sm" (click)="openEditCategory(category)">Edit</button>
+            <button
+              type="button"
+              class="btn btn-sm btn-danger"
+              [disabled]="busyCategoryId() === category.id"
+              (click)="deleteCategory(category)"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+
+        @if (category.questions.length === 0) {
+          <p class="empty-state">No questions in this category yet.</p>
+        } @else {
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Question</th>
+                  <th>Type</th>
+                  <th>Order</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (question of category.questions; track question.id) {
+                  <tr>
+                    <td>{{ question.text }}</td>
+                    <td><span class="badge badge-primary">{{ questionTypeLabel(question.questionType) }}</span></td>
+                    <td>{{ question.displayOrder }}</td>
+                    <td style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                      <button type="button" class="btn btn-sm" (click)="openEditQuestion(category, question)">Edit</button>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-danger"
+                        [disabled]="busyQuestionId() === question.id"
+                        (click)="deleteQuestion(category, question)"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+  }
+}
+
+<app-modal [open]="showEditFormModal()" title="Edit form details" (closed)="showEditFormModal.set(false)">
+  <form [formGroup]="editFormGroup" (ngSubmit)="submitEditForm()" novalidate>
+    <div class="form-field">
+      <label for="edit-form-name">Name</label>
+      <input id="edit-form-name" type="text" formControlName="name" />
+    </div>
+    <div class="form-field">
+      <label for="edit-form-description">Description</label>
+      <input id="edit-form-description" type="text" formControlName="description" />
+    </div>
+    <label class="checkbox-row">
+      <input type="checkbox" formControlName="isActive" />
+      Active (used for new evaluation periods - activating this deactivates any other active form)
+    </label>
+    <p class="hint" style="color: var(--color-text-muted); margin: 0.25rem 0 0;">
+      A form needs at least one Rapid Appraisal question before it can be activated.
+    </p>
+
+    @if (editFormError()) {
+      <div class="banner-error">{{ editFormError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="showEditFormModal.set(false)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="editFormSubmitting()">
+        {{ editFormSubmitting() ? 'Saving…' : 'Save changes' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal
+  [open]="categoryModalMode() !== null"
+  [title]="categoryModalMode() === 'edit' ? 'Edit category' : 'Add category'"
+  (closed)="closeCategoryModal()"
+>
+  <form [formGroup]="categoryForm" (ngSubmit)="submitCategory()" novalidate>
+    <div class="form-field">
+      <label for="category-name">Name</label>
+      <input id="category-name" type="text" formControlName="name" placeholder="e.g. Teaching Effectiveness" />
+    </div>
+    <div class="form-field">
+      <label for="category-order">Display order</label>
+      <input id="category-order" type="number" min="0" formControlName="displayOrder" />
+    </div>
+
+    @if (categoryError()) {
+      <div class="banner-error">{{ categoryError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="closeCategoryModal()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="categorySubmitting()">
+        {{ categorySubmitting() ? 'Saving…' : 'Save category' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal
+  [open]="questionModalCategoryId() !== null"
+  [title]="editingQuestion() ? 'Edit question' : 'Add question'"
+  (closed)="closeQuestionModal()"
+>
+  <form [formGroup]="questionForm" (ngSubmit)="submitQuestion()" novalidate>
+    <div class="form-field">
+      <label for="question-text">Question text</label>
+      <input id="question-text" type="text" formControlName="text" placeholder="e.g. Explains concepts clearly" />
+    </div>
+    <div class="form-field">
+      <label for="question-type">Answer type</label>
+      <select id="question-type" formControlName="questionType">
+        @for (type of questionTypes; track type) {
+          <option [value]="type">{{ questionTypeLabel(type) }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="question-order">Display order</label>
+      <input id="question-order" type="number" min="0" formControlName="displayOrder" />
+    </div>
+
+    @if (questionError()) {
+      <div class="banner-error">{{ questionError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="closeQuestionModal()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="questionSubmitting()">
+        {{ questionSubmitting() ? 'Saving…' : 'Save question' }}
+      </button>
+    </div>
+  </form>
+</app-modal>

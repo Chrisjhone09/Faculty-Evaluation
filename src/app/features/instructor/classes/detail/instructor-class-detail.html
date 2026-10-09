@@ -1,0 +1,126 @@
+<a routerLink="/instructor/classes" class="back-link">
+  ← Back to my classes
+</a>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (offering(); as o) {
+  <h1>{{ o.subjectCode }} - {{ o.subjectTitle }}</h1>
+  <p style="color: var(--color-text-muted); margin: 0 0 1.5rem;">Section {{ o.sectionCode }} · {{ o.term }}</p>
+}
+
+<div class="card" style="margin-bottom: 1.5rem;">
+  <h3 style="margin-top: 0;">Add a student manually</h3>
+  <form [formGroup]="addForm" (ngSubmit)="submitAdd()" novalidate style="display: flex; gap: 0.75rem; align-items: flex-end;">
+    <div class="form-field" style="flex: 1; margin-bottom: 0;">
+      <label for="add-student-number">Student number</label>
+      <input id="add-student-number" type="text" formControlName="studentNumber" placeholder="e.g. 2023-00123" />
+    </div>
+    <button type="submit" class="btn btn-primary" [disabled]="addSubmitting()">
+      {{ addSubmitting() ? 'Adding…' : 'Add' }}
+    </button>
+  </form>
+  @if (addError()) {
+    <div class="banner-error" style="margin-top: 0.75rem;">{{ addError() }}</div>
+  }
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+  <h3 style="margin-top: 0;">Upload masterlist (CSV)</h3>
+  <p class="hint" style="color: var(--color-text-muted); margin-top: -0.5rem;">
+    A CSV file with a "StudentNumber" header column, one student per row. If the file has no
+    "StudentNumber" column, a "StudentName" column is read instead, formatted "Lastname, Firstname Middlename" -
+    or, separate "FirstName"/"LastName" columns work too ("MiddleName" is optional either way).
+  </p>
+
+  <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
+    <input type="file" accept=".csv,text/csv" (change)="onFileSelected($event)" />
+    <button type="button" class="btn btn-sm" [disabled]="!selectedFile() || validating()" (click)="validateFile()">
+      {{ validating() ? 'Validating…' : 'Validate' }}
+    </button>
+  </div>
+
+  @if (validationError()) {
+    <div class="banner-error">{{ validationError() }}</div>
+  }
+
+  @if (importResult(); as result) {
+    <div class="banner-success">
+      Imported {{ result.importedCount }} student(s). Skipped {{ result.skippedCount }}.
+    </div>
+  }
+
+  @if (report(); as r) {
+    <div style="margin-top: 0.75rem;">
+      <p>
+        {{ r.totalRows }} row(s) parsed - <strong>{{ r.valid.length }}</strong> valid,
+        {{ r.duplicate.length }} already members, {{ r.notFound.length }} not found,
+        {{ r.ambiguous.length }} ambiguous, {{ r.malformed.length }} malformed.
+      </p>
+
+      @if (r.valid.length > 0) {
+        <button type="button" class="btn btn-primary" [disabled]="importing()" (click)="importValidRows()">
+          {{ importing() ? 'Importing…' : 'Import ' + r.valid.length + ' valid record(s)' }}
+        </button>
+      }
+
+      @if (r.notFound.length > 0) {
+        <div style="margin-top: 0.75rem;">
+          <strong>Not found:</strong>
+          <span class="hint" style="color: var(--color-text-muted);">{{ r.notFound.map((row) => row.studentNumber).join(', ') }}</span>
+        </div>
+      }
+      @if (r.duplicate.length > 0) {
+        <div style="margin-top: 0.5rem;">
+          <strong>Already members:</strong>
+          <span class="hint" style="color: var(--color-text-muted);">{{ r.duplicate.map((row) => row.studentNumber).join(', ') }}</span>
+        </div>
+      }
+      @if (r.ambiguous.length > 0) {
+        <div style="margin-top: 0.5rem;">
+          <strong>Ambiguous (matched more than one student by name - add manually instead):</strong>
+          <span class="hint" style="color: var(--color-text-muted);">{{ r.ambiguous.map((row) => row.studentNumber).join(', ') }}</span>
+        </div>
+      }
+      @if (r.malformed.length > 0) {
+        <div style="margin-top: 0.5rem;">
+          <strong>Malformed rows:</strong>
+          <span class="hint" style="color: var(--color-text-muted);">{{ r.malformed.map((row) => 'row ' + row.rowNumber).join(', ') }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<div class="card">
+  <h3 style="margin-top: 0;">Roster ({{ activeStudents().length }})</h3>
+
+  @if (loading()) {
+    <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+  } @else if (activeStudents().length === 0) {
+    <p class="empty-state">No students in this class yet.</p>
+  } @else {
+    <div class="table-wrap" style="border: none;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Student #</th>
+            <th>Name</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (student of activeStudents(); track student.id) {
+            <tr>
+              <td>{{ student.studentNumber }}</td>
+              <td>{{ student.studentName }}</td>
+              <td>{{ student.source }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

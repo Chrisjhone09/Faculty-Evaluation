@@ -1,0 +1,31 @@
+:host { display: block; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; }
+.class-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 4px 0 26px; flex-wrap: wrap; }
+.class-title { min-width: 0; }
+.eyebrow { display: block; font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px; }
+h1 { font-size: 24px; line-height: 1.4; margin: 0; overflow-wrap: anywhere; }
+h1 span { font-weight: 500; }
+.class-title p { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--color-text-muted); margin: 8px 0 0; }
+.instructor-identity, .student-identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.instructor-identity a { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.completion-overview { border-block: 1px solid var(--color-border); padding: 22px 0; }
+.section-title { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+h2 { font-size: 17px; margin: 0; display: flex; gap: 10px; align-items: center; }
+.section-title p { color: var(--color-text-muted); font-size: 13px; margin: 6px 0 0; }
+.class-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin: 26px 0 20px; }
+.class-metrics > div { border-left: 2px solid #dce2e5; padding-left: 16px; }
+.class-metrics .submitted-metric { border-color: #0f766e; }
+.class-metrics .pending-metric { border-color: #d99522; }
+.class-metrics span { color: var(--color-text-muted); display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.class-metrics strong { display: block; font-size: 30px; line-height: 1.3; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.submitted-metric strong { color: #0f766e; }
+.pending-metric strong { color: #a8690c; }
+.class-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 20px; font-size: 13px; color: var(--color-text-muted); }
+progress { width: 100%; height: 8px; border: 0; border-radius: 4px; overflow: hidden; background: #e5e9eb; accent-color: #0f766e; }
+progress::-webkit-progress-bar { background: #e5e9eb; }
+progress::-webkit-progress-value { background: #0f766e; }
+.student-section { padding-top: 28px; }
+.masterlist-table { min-width: 0; table-layout: fixed; }
+.masterlist-table td:first-child { overflow-wrap: anywhere; }
+.masterlist-table th:last-child, .masterlist-table td:last-child { width: 68px; text-align: right; }
+.roster-actions, .upload-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }

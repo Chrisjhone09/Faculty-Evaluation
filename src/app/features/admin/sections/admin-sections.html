@@ -1,0 +1,111 @@
+<div class="page-header">
+  <div>
+    <h2>Sections</h2>
+    <p style="color: var(--color-text-muted); margin: 0;">Blocks like "BSIT-2A" used when a Dean creates a class offering.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreateModal()"><app-icon name="plus" /> New section</button>
+</div>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (sections().length === 0) {
+  <div class="table-wrap">
+    <p class="empty-state">No sections yet. Create the first one above.</p>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (section of sections(); track section.id) {
+          <tr>
+            <td>{{ section.code }}</td>
+            <td>{{ section.departmentName }}</td>
+            <td>
+              @if (section.isActive) {
+                <span class="badge badge-success">Active</span>
+              } @else {
+                <span class="badge badge-muted">Inactive</span>
+              }
+            </td>
+            <td style="text-align: right;">
+              <button type="button" class="btn btn-sm" (click)="openEditModal(section)">Edit</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-modal [open]="showCreateModal()" title="New section" (closed)="showCreateModal.set(false)">
+  <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
+    <div class="form-field">
+      <label for="sec-code">Code</label>
+      <input id="sec-code" type="text" formControlName="code" placeholder="e.g. BSIT-2A" />
+    </div>
+    <div class="form-field">
+      <label for="sec-dept">Department</label>
+      <select id="sec-dept" formControlName="departmentId">
+        <option value="" disabled>Select a department…</option>
+        @for (department of departments(); track department.id) {
+          <option [value]="department.id">{{ department.name }}</option>
+        }
+      </select>
+    </div>
+
+    @if (createError()) {
+      <div class="banner-error">{{ createError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="showCreateModal.set(false)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="createSubmitting()">
+        {{ createSubmitting() ? 'Creating…' : 'Create section' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal [open]="editingSection() !== null" title="Edit section" (closed)="editingSection.set(null)">
+  <form [formGroup]="editForm" (ngSubmit)="submitEdit()" novalidate>
+    <div class="form-field">
+      <label for="edit-sec-code">Code</label>
+      <input id="edit-sec-code" type="text" formControlName="code" />
+    </div>
+    <div class="form-field">
+      <label for="edit-sec-dept">Department</label>
+      <select id="edit-sec-dept" formControlName="departmentId">
+        @for (department of departments(); track department.id) {
+          <option [value]="department.id">{{ department.name }}</option>
+        }
+      </select>
+    </div>
+    <label class="checkbox-row">
+      <input type="checkbox" formControlName="isActive" />
+      Active
+    </label>
+
+    @if (editError()) {
+      <div class="banner-error">{{ editError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="editingSection.set(null)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="editSubmitting()">
+        {{ editSubmitting() ? 'Saving…' : 'Save changes' }}
+      </button>
+    </div>
+  </form>
+</app-modal>

@@ -1,0 +1,85 @@
+<h1>Pending Evaluations</h1>
+<p style="color: var(--color-text-muted); margin: 0 0 1.25rem;">
+  Your real approved class memberships for the current evaluation period. Eligibility is always based on approved
+  class membership, never on picking an instructor yourself.
+</p>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (!result()?.hasActivePeriod) {
+  <div class="table-wrap">
+    <p class="empty-state">There's no active evaluation period right now. Check back once your school opens one.</p>
+  </div>
+} @else {
+  @if (result(); as r) {
+    <p class="hint" style="color: var(--color-text-muted); margin-top: -0.5rem;">
+      {{ r.evaluationPeriodName }} - open until {{ r.evaluationPeriodEndDate | date: 'medium' }}
+    </p>
+  }
+
+  <div class="table-wrap" style="margin-bottom: 1.5rem;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Section</th>
+          <th>Instructor</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of pending(); track trackByMembership($index, item)) {
+          <tr>
+            <td>{{ item.subjectCode }} - {{ item.subjectTitle }}</td>
+            <td>{{ item.sectionCode }}</td>
+            <td>{{ item.instructorName }}</td>
+            <td style="text-align: right;">
+              <a class="btn btn-primary btn-sm" [routerLink]="['/student/evaluate', item.classMembershipId]">
+                Evaluate
+              </a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="empty-state">Nothing pending - you're all caught up for this period.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top: 0;">Completed ({{ completed().length }})</h3>
+
+    @if (completed().length === 0) {
+      <p class="empty-state">No evaluations submitted yet this period.</p>
+    } @else {
+      <div class="table-wrap" style="border: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Section</th>
+              <th>Instructor</th>
+              <th>Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of completed(); track trackByMembership($index, item)) {
+              <tr>
+                <td>{{ item.subjectCode }} - {{ item.subjectTitle }}</td>
+                <td>{{ item.sectionCode }}</td>
+                <td>{{ item.instructorName }}</td>
+                <td>{{ item.submittedAtUtc | date: 'medium' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}

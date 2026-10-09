@@ -1,0 +1,137 @@
+<div class="page-header">
+  <div>
+    <h2>Departments</h2>
+    <p style="color: var(--color-text-muted); margin: 0;">Academic departments and their assigned Dean.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreateModal()"><app-icon name="plus" /> New department</button>
+</div>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (departments().length === 0) {
+  <div class="table-wrap">
+    <p class="empty-state">No departments yet. Create the first one above.</p>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Dean</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (department of departments(); track department.id) {
+          <tr>
+            <td>{{ department.code }}</td>
+            <td>{{ department.name }}</td>
+            <td>{{ deanLabel(department) }}</td>
+            <td>
+              @if (department.isActive) {
+                <span class="badge badge-success">Active</span>
+              } @else {
+                <span class="badge badge-muted">Inactive</span>
+              }
+            </td>
+            <td style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+              <button type="button" class="btn btn-sm" (click)="openAssignDean(department)">Assign dean</button>
+              <button type="button" class="btn btn-sm" (click)="openEditModal(department)">Edit</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-modal [open]="showCreateModal()" title="New department" (closed)="showCreateModal.set(false)">
+  <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
+    <div class="form-field">
+      <label for="dept-code">Code</label>
+      <input id="dept-code" type="text" formControlName="code" placeholder="e.g. CIT" />
+    </div>
+    <div class="form-field">
+      <label for="dept-name">Name</label>
+      <input id="dept-name" type="text" formControlName="name" placeholder="e.g. College of Information Technology" />
+    </div>
+
+    @if (createError()) {
+      <div class="banner-error">{{ createError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="showCreateModal.set(false)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="createSubmitting()">
+        {{ createSubmitting() ? 'Creating…' : 'Create department' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal [open]="editingDepartment() !== null" title="Edit department" (closed)="editingDepartment.set(null)">
+  <form [formGroup]="editForm" (ngSubmit)="submitEdit()" novalidate>
+    <div class="form-field">
+      <label for="edit-dept-code">Code</label>
+      <input id="edit-dept-code" type="text" formControlName="code" />
+    </div>
+    <div class="form-field">
+      <label for="edit-dept-name">Name</label>
+      <input id="edit-dept-name" type="text" formControlName="name" />
+    </div>
+    <label class="checkbox-row">
+      <input type="checkbox" formControlName="isActive" />
+      Active
+    </label>
+
+    @if (editError()) {
+      <div class="banner-error">{{ editError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="editingDepartment.set(null)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="editSubmitting()">
+        {{ editSubmitting() ? 'Saving…' : 'Save changes' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal [open]="assigningDeanFor() !== null" title="Assign dean" (closed)="assigningDeanFor.set(null)">
+  @if (assigningDeanFor(); as department) {
+    <p style="margin-top: 0; color: var(--color-text-muted);">{{ department.name }}</p>
+
+    <div class="form-field">
+      <label for="dean-select">Dean</label>
+      <select
+        id="dean-select"
+        [value]="selectedDeanUserId()"
+        (change)="selectedDeanUserId.set($any($event.target).value)"
+      >
+        <option value="" disabled>Select a user…</option>
+        @for (user of users(); track user.id) {
+          <option [value]="user.id">{{ user.fullName }} ({{ user.email }})</option>
+        }
+      </select>
+      <span class="hint">Any active user can be assigned - give them the Dean role from Users afterward.</span>
+    </div>
+
+    @if (assignError()) {
+      <div class="banner-error">{{ assignError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="assigningDeanFor.set(null)">Cancel</button>
+      <button type="button" class="btn btn-primary" [disabled]="assignSubmitting()" (click)="submitAssignDean()">
+        {{ assignSubmitting() ? 'Saving…' : 'Assign' }}
+      </button>
+    </div>
+  }
+</app-modal>

@@ -1,0 +1,100 @@
+<div class="page-header">
+  <div>
+    <h2>Evaluation Forms</h2>
+    <p style="color: var(--color-text-muted); margin: 0;">
+      Build the categories and questions students answer. Only one form can be active at a time.
+    </p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreateModal()"><app-icon name="plus" /> New form</button>
+</div>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (forms().length === 0) {
+  <div class="table-wrap">
+    <p class="empty-state">No evaluation forms yet. Create the first one above.</p>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Categories</th>
+          <th>Questions</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (form of forms(); track form.id) {
+          <tr>
+            <td>
+              {{ form.name }}
+              @if (form.description) {
+                <div class="hint" style="color: var(--color-text-muted); font-size: 0.8rem;">{{ form.description }}</div>
+              }
+            </td>
+            <td>{{ form.categories.length }}</td>
+            <td>{{ questionCount(form) }}</td>
+            <td>
+              @if (form.isActive) {
+                <span class="badge badge-success">Active</span>
+              } @else {
+                <span class="badge badge-muted">Inactive</span>
+              }
+            </td>
+            <td style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+              <a class="btn btn-sm" [routerLink]="[workspaceRoot + '/evaluations/forms', form.id]">Manage</a>
+              <button
+                type="button"
+                class="btn btn-sm"
+                [disabled]="busyFormId() === form.id"
+                (click)="toggleActive(form)"
+              >
+                {{ form.isActive ? 'Deactivate' : 'Activate' }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-danger"
+                [disabled]="busyFormId() === form.id"
+                (click)="deleteForm(form)"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-modal [open]="showCreateModal()" title="New evaluation form" (closed)="showCreateModal.set(false)">
+  <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
+    <div class="form-field">
+      <label for="form-name">Name</label>
+      <input id="form-name" type="text" formControlName="name" placeholder="e.g. AY 2026-2027 Standard Form" />
+    </div>
+    <div class="form-field">
+      <label for="form-description">Description (optional)</label>
+      <input id="form-description" type="text" formControlName="description" />
+    </div>
+    <span class="hint">New forms start inactive. Add categories and questions, then activate it from this list.</span>
+
+    @if (createError()) {
+      <div class="banner-error">{{ createError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="showCreateModal.set(false)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="createSubmitting()">
+        {{ createSubmitting() ? 'Creating…' : 'Create form' }}
+      </button>
+    </div>
+  </form>
+</app-modal>

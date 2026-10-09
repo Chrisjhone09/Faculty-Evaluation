@@ -1,0 +1,82 @@
+<app-page-header title="Comments">
+  <button type="button" class="btn btn-icon" aria-label="Refresh comments" title="Refresh comments" (click)="refresh()"><app-icon name="refresh" /></button>
+</app-page-header>
+
+@if (errorMessage()) {
+  <div class="banner-error" role="alert">{{ errorMessage() }} <button class="btn btn-sm" type="button" (click)="loadComments()">Retry</button></div>
+}
+@if (filtersError()) { <div class="banner-error" role="alert">{{ filtersError() }} <button class="btn btn-sm" type="button" (click)="refresh()">Retry filters</button></div> }
+
+<div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+  <div class="form-field" style="margin: 0;">
+    <label for="comments-department-filter">Department</label>
+    <select id="comments-department-filter" [value]="selectedDepartmentId()" (change)="onDepartmentChange($event)">
+      <option value="">All departments</option>
+      @for (department of departments(); track department.id) {
+        <option [value]="department.id">{{ department.name }}</option>
+      }
+    </select>
+  </div>
+  <div class="form-field" style="margin: 0;">
+    <label for="comments-instructor-filter">Instructor</label>
+    <select id="comments-instructor-filter" [value]="selectedInstructorId()" (change)="onInstructorChange($event)">
+      <option value="">All instructors</option>
+      @for (instructor of instructors(); track instructor.id) {
+        <option [value]="instructor.id">{{ instructor.name }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (!errorMessage()) {
+  @if (comments().length === 0) {
+    <p class="empty-state">No comments available for the current filters.</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table data-table-stack comments-table">
+        <thead>
+          <tr>
+            <th>Instructor</th>
+            <th>Department</th>
+            <th>Question</th>
+            <th>Comment</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (comment of comments(); track $index) {
+            <tr>
+              <td data-label="Instructor">{{ comment.instructorName }}</td>
+              <td data-label="Department">{{ comment.departmentName }}</td>
+              <td data-label="Question"><div>
+                {{ comment.questionText }}
+                @if (comment.questionType === QuestionType.RapidAppraisal) {
+                  <span class="badge badge-primary" style="margin-left: 0.4rem;">Rapid Appraisal</span>
+                }
+              </div></td>
+              <td data-label="Comment"><div>
+                <span>{{ comment.commentText }}</span>
+                @if (comment.isFlaggedNegative) {
+                  <span class="badge badge-warning" style="margin-left: 0.4rem;">Flagged negative</span>
+                }
+                @if (comment.originalCommentText) {
+                  <div>
+                    <button type="button" class="btn btn-sm" style="margin-top: 0.3rem;" (click)="toggleOriginal($index)">
+                      {{ isOriginalExpanded($index) ? 'Hide original' : 'Show original' }}
+                    </button>
+                    @if (isOriginalExpanded($index)) {
+                      <div class="hint" style="color: var(--color-text-muted); margin-top: 0.25rem; padding-left: 0.5rem; border-left: 2px solid var(--color-primary-border-strong);">
+                        Original: {{ comment.originalCommentText }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

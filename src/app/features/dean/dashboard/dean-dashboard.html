@@ -1,0 +1,184 @@
+<app-page-header
+  title="Department Overview"
+  description="Your department at a glance - what needs attention, what's running, and how evaluations are tracking."
+/>
+
+@if (errorMessage()) {
+  <div class="banner-error">
+    <app-icon name="alert-circle" size="sm" />
+    <div class="alert-body">{{ errorMessage() }}</div>
+  </div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading your department…</p>
+} @else if (summary(); as s) {
+  <!-- Needs attention. Rendered only when there is something to act on, so
+       the dashboard stays quiet on a normal day rather than always showing a
+       "0 pending" card that trains people to ignore it. -->
+  @if (s.pendingClassRequests > 0) {
+    <a class="card card-interactive mb-5" routerLink="/dean/classes" [queryParams]="{ tab: 'requests' }">
+      <div class="row-between">
+        <div class="row" style="gap: var(--space-3); flex-wrap: nowrap;">
+          <span class="empty-state-icon" style="margin: 0; width: 36px; height: 36px; background: var(--color-warning-bg); color: var(--color-warning-text);">
+            <app-icon name="inbox" />
+          </span>
+          <div>
+            <div class="card-title">
+              {{ s.pendingClassRequests }}
+              {{ s.pendingClassRequests === 1 ? 'class request' : 'class requests' }} awaiting your review
+            </div>
+            <div class="card-subtitle">Instructors can't start until these are approved or rejected.</div>
+          </div>
+        </div>
+        <span class="btn btn-primary btn-sm">
+          Review
+          <app-icon name="chevron-right" size="sm" />
+        </span>
+      </div>
+    </a>
+  }
+
+  <!-- Key metrics. Counts are neutral; the rating is the one number that
+       earns the brand accent. -->
+  <div class="card-grid mb-6">
+    <a class="stat-tile card-interactive" routerLink="/dean/classes">
+      <span class="stat-label">Active classes</span>
+      <span class="stat-value stat-value-neutral">{{ s.totalActiveOfferings }}</span>
+      <span class="stat-meta">of {{ totalOfferings() }} total</span>
+    </a>
+
+    <a class="stat-tile card-interactive" routerLink="/dean/faculty">
+      <span class="stat-label">Instructors</span>
+      <span class="stat-value stat-value-neutral">{{ s.totalInstructors }}</span>
+      <span class="stat-meta">View performance</span>
+    </a>
+
+    <div class="stat-tile">
+      <span class="stat-label">Students enrolled</span>
+      <span class="stat-value stat-value-neutral">{{ s.totalStudentsAcrossActiveOfferings }}</span>
+      <span class="stat-meta">across active classes</span>
+    </div>
+
+    <div class="stat-tile">
+      <span class="stat-label">Evaluations submitted</span>
+      <span class="stat-value stat-value-neutral">{{ s.totalEvaluationsSubmitted }}</span>
+      @if (s.meetsAnonymityThreshold) {
+        <span class="stat-meta">
+          <app-icon name="check-circle" size="sm" class="text-success" />
+          Results unlocked
+        </span>
+      } @else if (s.hasEvaluationData) {
+        <span class="stat-meta">{{ minimumRespondents - s.totalEvaluationsSubmitted }} more to unlock results</span>
+      } @else {
+        <span class="stat-meta">None yet</span>
+      }
+    </div>
+  </div>
+
+  <div class="grid grid-main-rail mb-6">
+    <!-- Evaluation results -->
+    <div class="card">
+      <div class="row-between mb-4">
+        <div>
+          <h2 class="card-title">Evaluation results</h2>
+          <p class="card-subtitle">Department-wide average across all instructors.</p>
+        </div>
+        @if (s.meetsAnonymityThreshold) {
+          <a class="btn btn-sm" routerLink="/dean/faculty">
+            By instructor
+            <app-icon name="chevron-right" size="sm" />
+          </a>
+        }
+      </div>
+
+      @if (!s.hasEvaluationData) {
+        <app-empty-state
+          icon="clipboard"
+          title="No evaluations yet"
+          message="Once an evaluation period opens and students start submitting, department results appear here."
+        />
+      } @else if (!s.meetsAnonymityThreshold) {
+        <!-- Progress toward the anonymity threshold is more useful here than
+             a withheld number, because it tells the Dean how close they are. -->
+        <div class="mb-4">
+          <div class="meter-head">
+            <span class="text-muted">
+              {{ s.totalEvaluationsSubmitted }} of {{ minimumRespondents }} responses needed
+            </span>
+            <span class="meter-value">{{ s.totalEvaluationsSubmitted }}/{{ minimumRespondents }}</span>
+          </div>
+          <div class="meter meter-lg">
+            <div class="meter-fill" [style.width.%]="anonymityProgress()"></div>
+          </div>
+        </div>
+        <p class="hint">
+          Scores stay hidden until {{ minimumRespondents }} evaluations are in, so no single student's answers can be
+          identified.
+        </p>
+      } @else {
+        <div class="row" style="gap: var(--space-8); align-items: flex-start;">
+          <div>
+            <span class="stat-label">Department average</span>
+            <div class="stat-value">
+              {{ s.departmentAverageRating }}<span class="stat-unit">/ 5</span>
+            </div>
+            <div class="stat-meta">from {{ s.totalEvaluationsSubmitted }} evaluations</div>
+          </div>
+
+          <!-- Rapid Appraisal is a different scale (6-10) and must never be
+               averaged together with the 1-5 categories. -->
+          @if (s.rapidAppraisalDepartmentAverageRating !== null) {
+            <div>
+              <span class="stat-label">Rapid Appraisal</span>
+              <div class="stat-value">
+                {{ s.rapidAppraisalDepartmentAverageRating }}<span class="stat-unit">/ 10</span>
+              </div>
+              <div class="stat-meta">separate 6-10 scale</div>
+            </div>
+          }
+
+          <div style="flex: 1; min-width: 180px;">
+            <div class="meter meter-lg mb-2">
+              <div class="meter-fill" [style.width.%]="(s.departmentAverageRating ?? 0) / 5 * 100"></div>
+            </div>
+            <p class="hint mb-0">
+              See Faculty for a per-instructor breakdown with category ratings, comments and AI summaries.
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Offering mix -->
+    <div class="card">
+      <h2 class="card-title mb-4">Class offerings</h2>
+      @if (totalOfferings() === 0) {
+        <app-empty-state icon="book" message="No class offerings created yet." />
+      } @else {
+        <app-donut-chart
+          [data]="offeringMixData()"
+          [centerValue]="s.totalActiveOfferings + ''"
+          centerLabel="active"
+          ariaLabel="Active versus archived class offerings"
+        />
+      }
+    </div>
+  </div>
+
+  <!-- Offerings by term (previously the Reports page) -->
+  <div class="card">
+    <div class="row-between mb-4">
+      <div>
+        <h2 class="card-title">Enrolment by term</h2>
+        <p class="card-subtitle">Students and offerings per academic term.</p>
+      </div>
+    </div>
+
+    @if (termChartData().length === 0) {
+      <app-empty-state icon="calendar" message="No offerings yet, so there's nothing to break down by term." />
+    } @else {
+      <app-h-bar-chart [data]="termChartData()" ariaLabel="Students enrolled per term" />
+    }
+  </div>
+}

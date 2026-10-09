@@ -1,0 +1,89 @@
+<a routerLink="/student/dashboard" class="back-link">
+  ← Back to dashboard
+</a>
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (loadError()) {
+  <div class="banner-error">{{ loadError() }}</div>
+} @else if (submitted()) {
+  <div class="card">
+    <h1 style="margin-top: 0;">Thank you</h1>
+    <p style="color: var(--color-text-muted);">Your evaluation has been submitted. Your answers are anonymous to your instructor.</p>
+    <button type="button" class="btn btn-primary" (click)="backToDashboard()">Back to dashboard</button>
+  </div>
+} @else if (form(); as f) {
+  <h1>{{ f.subjectCode }} - {{ f.subjectTitle }}</h1>
+  <p style="color: var(--color-text-muted); margin: 0 0 1.5rem;">Section {{ f.sectionCode }} · Instructor: {{ f.instructorName }}</p>
+
+  @if (submitError()) {
+    <div class="banner-error" style="margin-bottom: 1rem;">{{ submitError() }}</div>
+  }
+
+  @for (category of allCategories(); track category.id) {
+    <div class="card" style="margin-bottom: 1.25rem;">
+      <h3 style="margin-top: 0;">{{ category.name }}</h3>
+
+      @for (question of category.questions; track question.id) {
+        <div class="form-field" style="margin-bottom: 1.25rem;">
+          <label>{{ question.text }}</label>
+
+          @if (question.questionType === QuestionType.Likert1to5) {
+            <div style="display: flex; gap: 1.25rem; margin-top: 0.4rem;">
+              @for (value of ratingScale; track value) {
+                <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: normal;">
+                  <input
+                    type="radio"
+                    [name]="question.id"
+                    [checked]="answers()[question.id]?.ratingValue === value"
+                    (change)="setRating(question.id, value)"
+                  />
+                  {{ value }}
+                </label>
+              }
+            </div>
+            <span class="hint" style="color: var(--color-text-muted);">1 = Strongly Disagree, 5 = Strongly Agree</span>
+          } @else if (question.questionType === QuestionType.RapidAppraisal) {
+            <div style="display: flex; gap: 1rem; margin-top: 0.4rem; flex-wrap: wrap;">
+              @for (value of rapidAppraisalScale; track value) {
+                <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: normal;">
+                  <input
+                    type="radio"
+                    [name]="question.id"
+                    [checked]="answers()[question.id]?.ratingValue === value"
+                    (change)="setRating(question.id, value)"
+                  />
+                  {{ value }}
+                </label>
+              }
+            </div>
+            <span class="hint" style="color: var(--color-text-muted);">6 = Needs Improvement, 10 = Outstanding</span>
+            <textarea
+              rows="3"
+              style="margin-top: 0.6rem;"
+              placeholder="Please justify your rating"
+              [value]="answers()[question.id]?.commentText ?? ''"
+              (input)="setComment(question.id, $event)"
+            ></textarea>
+          } @else {
+            <textarea
+              rows="3"
+              [value]="answers()[question.id]?.commentText ?? ''"
+              (input)="setComment(question.id, $event)"
+            ></textarea>
+          }
+
+          @if (fieldErrors()[question.id]) {
+            <div class="banner-error" style="margin-top: 0.5rem;">{{ fieldErrors()[question.id] }}</div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-primary" [disabled]="submitting()" (click)="submit()">
+      {{ submitting() ? 'Submitting…' : 'Submit evaluation' }}
+    </button>
+  </div>
+}

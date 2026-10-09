@@ -1,0 +1,33 @@
+.roster-toolbar { display: flex; gap: 16px; justify-content: space-between; align-items: center; margin: 22px 0 16px; flex-wrap: wrap; }
+.search-field { display: flex; align-items: center; position: relative; width: 340px; max-width: 100%; }
+.search-field app-icon { position: absolute; left: 12px; color: var(--color-text-muted); }
+.search-field input { width: 100%; padding-left: 36px; min-width: 0; }
+.status-filters { display: flex; border-bottom: 1px solid var(--color-border); }
+.status-filters button { border: 0; background: transparent; padding: 10px 13px; font: inherit; font-size: 13px; color: var(--color-text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+.status-filters button[aria-pressed=true] { color: #0f766e; border-bottom-color: #0f766e; font-weight: 600; }
+.status-filters button:disabled { opacity: 0.5; cursor: default; }
+.roster-table { background: white; }
+.student-identity strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.student-identity span { display: block; color: var(--color-text-muted); font-size: 12px; margin-top: 3px; }
+.student-actions { text-align: right; }
+.submitted-date, .enrollment-source { color: var(--color-text-muted); font-size: 13px; }
+.roster-count { color: var(--color-text-muted); font-size: 12px; margin-top: 12px; }
+.file-label { display: block; color: var(--color-text-muted); font-size: 13px; margin-bottom: 16px; }
+.upload-row input { max-width: 100%; }
+@media (max-width: 700px) {
+  .class-header { gap: 20px; } h1 { font-size: 21px; }
+  .class-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+  .class-metrics span { align-items: flex-start; font-size: 12px; }
+  .class-progress { grid-template-columns: 1fr; gap: 10px; }
+  .roster-toolbar, .roster-actions, .search-field { width: 100%; }
+  .roster-actions .btn { flex: 1; }
+  .roster-table table, .roster-table tbody { display: block; min-width: 0; }
+  .roster-table thead { display: none; }
+  .roster-table tr { display: grid; grid-template-columns: minmax(0, 1fr) 40px; padding: 16px; border-bottom: 1px solid var(--color-border); gap: 8px; }
+  .roster-table td { display: block; padding: 0; border: 0; white-space: normal; }
+  .roster-table td:first-child { grid-column: 1; }
+  .roster-table td:nth-child(2), .roster-table td:nth-child(3) { grid-column: 1; padding-left: 56px; }
+  .roster-table td.enrollment-source { display: none; }
+  .roster-table td.student-actions { grid-column: 2; grid-row: 1; }
+  .roster-table td.empty-state { grid-column: 1 / -1; padding: 20px 0; }
+}

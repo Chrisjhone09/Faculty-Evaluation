@@ -1,0 +1,158 @@
+<div class="page-header">
+  <div>
+    <h2>Class Offerings</h2>
+    
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreateModal()">+ New offering</button>
+</div>
+
+<div class="toolbar">
+  <app-table-search [value]="search()" (changed)="search.set($event)" placeholder="Search classes..." />
+  @if (isGuidance) {
+    <select aria-label="Filter classes by department" [value]="departmentFilter()" (change)="departmentFilter.set($any($event.target).value)">
+      <option value="">All departments</option>
+      @for (department of departmentOptions(); track department[0]) { <option [value]="department[0]">{{ department[1] }}</option> }
+    </select>
+  }
+</div>
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (visibleOfferings().length === 0) {
+  <div class="table-wrap">
+    <p class="empty-state">No matching class offerings.</p>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Section</th>
+          @if (isGuidance) { <th>Department</th> }
+          <th>Term</th>
+          <th>Instructor</th>
+          <th>Students</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (offering of visibleOfferings(); track offering.id) {
+          <tr>
+            <td>{{ offering.subjectCode }} - {{ offering.subjectTitle }}</td>
+            <td>{{ offering.sectionCode }}</td>
+            @if (isGuidance) { <td>{{ offering.departmentName }}</td> }
+            <td>{{ offering.term }}</td>
+            <td>{{ offering.instructorName ?? 'Unassigned' }}</td>
+            <td>{{ offering.studentCount }}</td>
+            <td>
+              @if (offering.status === Status.Active) {
+                <span class="badge badge-success">Active</span>
+              } @else {
+                <span class="badge badge-muted">Archived</span>
+              }
+            </td>
+            <td style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+              <a class="btn btn-sm" [routerLink]="[workspaceRoot + '/classes', offering.id]">Manage</a>
+              @if (offering.status === Status.Active) {
+                <button type="button" class="btn btn-sm" (click)="openAssignInstructor(offering)">
+                  {{ offering.instructorId ? 'Reassign' : 'Assign' }} instructor
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-danger"
+                  [disabled]="busyId() === offering.id"
+                  (click)="archive(offering)"
+                >
+                  Archive
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-modal [open]="showCreateModal()" title="New class offering" (closed)="showCreateModal.set(false)">
+  <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
+    <div class="form-field">
+      <label for="cls-subject">Subject</label>
+      <select id="cls-subject" formControlName="subjectId">
+        <option value="" disabled>Select a subject…</option>
+        @for (subject of subjects(); track subject.id) {
+          <option [value]="subject.id">{{ subject.code }} - {{ subject.title }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="cls-section">Section</label>
+      <select id="cls-section" formControlName="sectionId">
+        <option value="" disabled>Select a section…</option>
+        @for (section of sections(); track section.id) {
+          <option [value]="section.id">{{ section.code }} ({{ section.departmentName }})</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="cls-term">Term</label>
+      <input id="cls-term" type="text" formControlName="term" placeholder="e.g. AY 2026-2027, 1st Semester" />
+    </div>
+    <div class="form-field">
+      <label for="cls-instructor">Instructor (optional - can assign later)</label>
+      <select id="cls-instructor" formControlName="instructorId">
+        <option value="">Unassigned</option>
+        @for (instructor of createInstructors(); track instructor.id) {
+          <option [value]="instructor.id">{{ instructor.firstName }} {{ instructor.lastName }}</option>
+        }
+      </select>
+    </div>
+
+    @if (createError()) {
+      <div class="banner-error">{{ createError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="showCreateModal.set(false)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="createSubmitting()">
+        {{ createSubmitting() ? 'Creating…' : 'Create offering' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal [open]="assigningFor() !== null" title="Assign instructor" (closed)="assigningFor.set(null)">
+  @if (assigningFor(); as offering) {
+    <p style="margin-top: 0; color: var(--color-text-muted);">{{ offering.subjectCode }} / {{ offering.sectionCode }} ({{ offering.term }})</p>
+
+    <div class="form-field">
+      <label for="assign-instructor-select">Instructor</label>
+      <select
+        id="assign-instructor-select"
+        [value]="assignInstructorId()"
+        (change)="assignInstructorId.set($any($event.target).value)"
+      >
+        <option value="" disabled>Select an instructor…</option>
+        @for (instructor of assignInstructors(); track instructor.id) {
+          <option [value]="instructor.id">{{ instructor.firstName }} {{ instructor.lastName }}</option>
+        }
+      </select>
+    </div>
+
+    @if (assignError()) {
+      <div class="banner-error">{{ assignError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="assigningFor.set(null)">Cancel</button>
+      <button type="button" class="btn btn-primary" [disabled]="assignSubmitting()" (click)="submitAssignInstructor()">
+        {{ assignSubmitting() ? 'Saving…' : 'Assign' }}
+      </button>
+    </div>
+  }
+</app-modal>

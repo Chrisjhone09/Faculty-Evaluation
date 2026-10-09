@@ -1,0 +1,22 @@
+:host { display: block; min-width: 0; }
+.roster-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); margin-bottom: var(--space-4); }
+.roster-filters .form-field { margin: 0; min-width: 0; }
+.class-meta { display: block; margin-top: var(--space-1); color: var(--color-text-muted); font-size: var(--text-sm); }
+.roster-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.instructor-assignment { display: flex; align-items: center; gap: var(--space-2); }
+fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+@media (max-width: 900px) {
+  .data-table, .data-table tbody { display: block; width: 100%; min-width: 0; }
+  .data-table thead { display: none; }
+  .data-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding: var(--space-4); border-bottom: 1px solid var(--color-border); }
+  .data-table td { display: block; min-width: 0; padding: 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  .data-table td[data-label] { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+  .data-table td[data-label]::before { content: attr(data-label); color: var(--color-text-muted); font-size: var(--text-sm); }
+  .roster-actions { justify-content: flex-start; }
+  .roster-actions .btn { flex: 1 1 auto; }
+}
+@media (max-width: 640px) {
+  .roster-filters { grid-template-columns: minmax(0, 1fr); }
+  .modal-actions .btn { flex: 1 1 auto; }
+}

@@ -1,0 +1,18 @@
+@if (bars().length === 0) {
+  <p class="empty-state">No data to chart yet.</p>
+} @else {
+  <div class="bar-chart">
+    @for (bar of bars(); track bar.label) {
+      <div class="bar-chart-column">
+        <div class="bar-chart-value">{{ bar.value }}{{ valueSuffix }}</div>
+        <div class="bar-chart-track">
+          <div class="bar-chart-fill" [style.height.%]="bar.heightPercent" [style.background]="barColor"></div>
+        </div>
+        <div class="bar-chart-label">{{ bar.label }}</div>
+        @if (bar.note) {
+          <div class="bar-chart-note">{{ bar.note }}</div>
+        }
+      </div>
+    }
+  </div>
+}

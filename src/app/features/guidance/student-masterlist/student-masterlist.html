@@ -1,0 +1,53 @@
+<app-page-header title="Student Master List">
+  <button class="btn" type="button" (click)="downloadTemplate()"><app-icon name="download" /> CSV template</button>
+</app-page-header>
+
+<section class="upload-section" aria-label="School-wide upload">
+  <h2>School-wide upload</h2>
+  <div class="upload-controls">
+    <div class="form-field"><label for="student-masterlist-file">CSV file - StudentNumber</label>
+      <input id="student-masterlist-file" type="file" accept=".csv,text/csv" [disabled]="busy()" (change)="chooseFile($event)" />
+    </div>
+    <button class="btn" type="button" [disabled]="!selectedFile() || busy()" (click)="validate()"><app-icon name="check" /> {{ busy() ? 'Processing...' : 'Validate' }}</button>
+  </div>
+  @if (uploadError()) { <div class="banner-error" role="alert">{{ uploadError() }}</div> }
+  @if (result(); as imported) { <div class="banner-success" role="status">Saved {{ imported.importedCount }} student number(s). Skipped {{ imported.skippedCount }}.</div> }
+  @if (report(); as preview) {
+    <div class="import-summary">
+      <p>{{ preview.totalRows }} row(s) &middot; {{ preview.valid.length }} valid &middot; {{ preview.duplicate.length }} duplicate &middot; {{ preview.malformed.length }} malformed</p>
+      @if (preview.valid.length) { <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="importValid()"><app-icon name="upload" /> Import {{ preview.valid.length }} student number(s)</button> }
+    </div>
+    <div class="table-wrap"><table class="data-table preview-table">
+      <thead><tr><th>Row</th><th>Student number</th><th>Result</th></tr></thead>
+      <tbody>
+        @for (row of preview.valid; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber }}</td><td><span class="badge badge-success">Valid</span></td></tr> }
+        @for (row of preview.duplicate; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber }}</td><td><span class="badge badge-muted">Duplicate</span></td></tr> }
+        @for (row of preview.malformed; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber || '--' }}</td><td><span class="badge badge-danger">Malformed</span></td></tr> }
+      </tbody>
+    </table></div>
+  }
+</section>
+
+<section aria-label="Saved student numbers">
+  <div class="list-heading"><h2>Student numbers <span class="badge badge-muted">{{ entries().length }}</span></h2>
+    <button class="btn btn-icon" type="button" aria-label="Refresh master list" title="Refresh master list" [disabled]="loading()" (click)="refresh()"><app-icon name="refresh" /></button>
+  </div>
+  <div class="filters">
+    <input type="search" aria-label="Search student numbers" placeholder="Search student number" [value]="search()" (input)="search.set($any($event.target).value)" />
+    <select aria-label="Registration status" [value]="status()" (change)="status.set($any($event.target).value)"><option value="">All statuses</option><option value="registered">Registered</option><option value="pending">Awaiting registration</option></select>
+  </div>
+  @if (loadError()) { <div class="banner-error" role="alert">{{ loadError() }} <button class="btn btn-sm" type="button" (click)="refresh()">Retry</button></div> }
+  @if (loading()) { <p class="loading-row">Loading...</p> }
+  @else {
+    <div class="table-wrap"><table class="data-table masterlist-table">
+      <thead><tr><th>Student number</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        @for (entry of visibleEntries(); track entry.id) {
+          <tr><td>{{ entry.studentNumber }}</td><td><span class="badge" [class.badge-success]="entry.isRegistered" [class.badge-muted]="!entry.isRegistered">{{ entry.isRegistered ? 'Registered' : 'Awaiting registration' }}</span></td>
+            <td class="cell-actions"><button class="btn btn-icon btn-danger" type="button" [attr.aria-label]="'Remove student number ' + entry.studentNumber" [title]="'Remove student number ' + entry.studentNumber" [disabled]="removingId() !== null" (click)="remove(entry)"><app-icon name="trash" /></button></td>
+          </tr>
+        } @empty { <tr><td colspan="3" class="empty-state">{{ entries().length ? 'No matching student numbers.' : 'No student numbers uploaded yet.' }}</td></tr> }
+      </tbody>
+    </table></div>
+  }
+</section>

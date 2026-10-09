@@ -1,0 +1,53 @@
+<h1>Flagged Faculty</h1>
+<p style="color: var(--color-text-muted); margin: 0 0 1.25rem;">
+  Instructors whose evaluated rating is below the flagging threshold. Based on a configurable threshold, and only
+  ever shown once an instructor has enough respondents to stay anonymous.
+</p>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (rows().length === 0) {
+  <div class="card">
+    <p class="empty-state">No faculty below the threshold right now.</p>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Instructor</th>
+          <th>Department</th>
+          <th>Evaluations Submitted</th>
+          <th>Rating</th>
+          <th>Reason</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.instructorId) {
+          <tr>
+            <td>{{ row.instructorName }}</td>
+            <td>{{ row.departmentName }}</td>
+            <td>{{ row.evaluationsSubmittedCount }}</td>
+            <td>
+              @if (row.averageRating !== null) {
+                {{ row.averageRating }} / 5
+              }
+              @if (row.rapidAppraisalAverageRating !== null) {
+                <div class="hint" style="color: var(--color-text-muted);">{{ row.rapidAppraisalAverageRating }} / 10 rapid appraisal</div>
+              }
+            </td>
+            <td class="hint" style="color: var(--color-text-muted);">{{ row.reason }}</td>
+            <td style="text-align: right;">
+              <a class="btn btn-sm" [routerLink]="['/guidance/faculty-performance', row.instructorId]">View Results</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

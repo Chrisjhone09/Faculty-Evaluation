@@ -1,0 +1,126 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<div class="shell" [class.is-collapsed]="collapsed()">
+  <!-- Scrim behind the off-canvas nav on small screens. -->
+  @if (mobileNavOpen()) {
+    <div class="nav-scrim" (click)="toggleMobileNav()" aria-hidden="true"></div>
+  }
+
+  <aside class="sidebar" [class.is-open]="mobileNavOpen()">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">FE</span>
+      <div class="brand-text">
+        <div class="brand-title">Faculty Evaluation</div>
+        <div class="brand-subtitle">{{ title }}</div>
+      </div>
+      <button
+        type="button"
+        class="nav-close"
+        (click)="toggleMobileNav()"
+        aria-label="Close navigation"
+      >
+        <app-icon name="x" size="sm" />
+      </button>
+    </div>
+
+    <nav class="nav scroll-area" aria-label="Main">
+      @for (group of groups(); track $index) {
+        @if (group.label) {
+          <div class="nav-section">{{ group.label }}</div>
+        }
+
+        @for (item of group.items; track item.label) {
+          @if (item.path && !item.comingSoon) {
+            <a
+              class="nav-item"
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+              [attr.data-tooltip]="collapsed() ? item.label : null"
+            >
+              @if (item.icon) {
+                <app-icon [name]="item.icon" size="sm" />
+              }
+              <span class="nav-label">{{ item.label }}</span>
+              @if (item.badge) {
+                <span class="nav-badge" [class.is-alert]="item.badgeAlert">{{ item.badge }}</span>
+              }
+            </a>
+          } @else {
+            <span class="nav-item disabled" [attr.data-tooltip]="collapsed() ? item.label : null">
+              @if (item.icon) {
+                <app-icon [name]="item.icon" size="sm" />
+              }
+              <span class="nav-label">{{ item.label }}</span>
+              <span class="nav-soon">Soon</span>
+            </span>
+          }
+        }
+      }
+    </nav>
+
+    <button type="button" class="nav-collapse" (click)="toggleCollapsed()">
+      <app-icon [name]="collapsed() ? 'chevron-right' : 'chevron-left'" size="sm" />
+      <span class="nav-label">Collapse</span>
+    </button>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button
+          type="button"
+          class="btn btn-ghost btn-icon nav-toggle"
+          (click)="toggleMobileNav()"
+          [attr.aria-expanded]="mobileNavOpen()"
+          aria-label="Open navigation"
+        >
+          <app-icon name="menu" />
+        </button>
+        <span class="topbar-section">{{ currentSection() }}</span>
+      </div>
+
+      @if (authService.currentUser(); as user) {
+        <div class="user-menu">
+          <button
+            type="button"
+            class="user-trigger"
+            (click)="toggleUserMenu()"
+            [attr.aria-expanded]="userMenuOpen()"
+            aria-haspopup="menu"
+          >
+            <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+            <span class="user-info">
+              <span class="user-name">{{ user.fullName }}</span>
+              <span class="user-roles">{{ user.roles.join(', ') }}</span>
+            </span>
+            <app-icon name="chevron-down" size="sm" />
+          </button>
+
+          @if (userMenuOpen()) {
+            <div class="user-dropdown" role="menu">
+              <div class="user-dropdown-head">
+                <div class="user-name">{{ user.fullName }}</div>
+                <div class="user-email truncate">{{ user.email }}</div>
+              </div>
+              <button type="button" class="user-dropdown-item" role="menuitem" (click)="logout()">
+                <app-icon name="logout" size="sm" />
+                Sign out
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </header>
+
+    <main class="content" id="main-content" tabindex="-1">
+      <div class="content-inner">
+        @if (showRouterOutlet) {
+          <router-outlet />
+        } @else {
+          <ng-content />
+        }
+      </div>
+    </main>
+  </div>
+</div>

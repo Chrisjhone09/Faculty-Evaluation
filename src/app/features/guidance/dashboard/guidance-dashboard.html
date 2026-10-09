@@ -1,0 +1,162 @@
+<div class="overview-header">
+  <div>
+    <div class="eyebrow">Guidance workspace</div>
+    <h1>System Overview</h1>
+  </div>
+  <div class="overview-actions">
+    @if (updatedAt()) { <span class="updated">Updated {{ updatedAt() }}</span> }
+    <button class="btn btn-icon" type="button" aria-label="Refresh analytics" title="Refresh analytics" [disabled]="loading()" (click)="refresh()">
+      <app-icon name="refresh" />
+    </button>
+    <button class="btn" type="button" [disabled]="!analytics() || loading()" (click)="exportCsv()">
+      <app-icon name="download" /> Export CSV
+    </button>
+  </div>
+</div>
+
+<div class="overview-filters">
+  <div class="filter-field">
+    <label for="analytics-period">Evaluation period</label>
+    <select id="analytics-period" [value]="selectedPeriod() || analytics()?.periodId || ''"
+      (change)="filter('period', $any($event.target).value)">
+      @if (!analytics()?.periods?.length) { <option value="">No evaluation periods</option> }
+      @for (period of analytics()?.periods ?? []; track period.id) {
+        <option [value]="period.id">{{ period.name }}{{ period.status === 'Active' ? ' (Active)' : '' }}</option>
+      }
+    </select>
+  </div>
+  <div class="filter-field">
+    <label for="analytics-department">Department</label>
+    <select id="analytics-department" [value]="selectedDepartment()" (change)="filter('department', $any($event.target).value)">
+      <option value="">All departments</option>
+      @for (department of departments(); track department.id) { <option [value]="department.id">{{ department.name }}{{ department.isActive ? '' : ' (Inactive)' }}</option> }
+    </select>
+  </div>
+  <a class="btn btn-primary" routerLink="/guidance/rosters"><app-icon name="upload" /> Upload master list</a>
+</div>
+
+@if (error()) {
+  <div class="banner-error" role="alert">{{ error() }} <button class="btn btn-sm" (click)="refresh()">Retry</button></div>
+}
+@if (loading()) {
+  <div class="analytics-loading" role="status"><span class="spinner"></span> Loading analytics...</div>
+} @else if (analytics(); as a) {
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label"><app-icon name="users" /> Students submitted</div>
+      <div class="metric-value">{{ a.submittedStudents | number }}</div>
+      <div class="metric-meta">{{ a.periodName }}</div>
+      <div class="metric-meta">{{ a.submitted | number }} evaluations &middot; unique students counted once</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><app-icon name="check-circle" /> Evaluation completion</div>
+      <div class="metric-value">{{ completion() }}<span>%</span></div>
+      <div class="metric-meta">{{ a.completed | number }} of {{ a.eligible | number }} current memberships</div>
+    </div>
+    <a class="metric metric-link" routerLink="/guidance/rosters">
+      <div class="metric-label"><app-icon name="book" /> Active rosters</div>
+      <div class="metric-value">{{ a.activeClasses | number }}</div>
+      <div class="metric-meta">{{ facultyCount() | number }} active faculty <app-icon name="chevron-right" size="sm" /></div>
+    </a>
+    <a class="metric metric-link" routerLink="/guidance/faculty" [queryParams]="{ tab: 'flagged' }">
+      <div class="metric-label"><app-icon name="flag" /> Flagged faculty</div>
+      <div class="metric-value" [class.text-warning]="flagged().length > 0">{{ flagged().length }}</div>
+      <div class="metric-meta">All periods <app-icon name="chevron-right" size="sm" /></div>
+    </a>
+  </div>
+
+  @if (a.pendingAccounts > 0) {
+    <div class="attention-strip">
+      <span class="attention-label"><app-icon name="inbox" /> Awaiting review</span>
+      @if (a.pendingAccounts > 0) {
+        <a routerLink="/guidance/users"><strong>{{ a.pendingAccounts }}</strong> student accounts <span class="text-xs">(system-wide)</span><app-icon name="chevron-right" size="sm" /></a>
+      }
+    </div>
+  }
+
+  <div class="chart-row">
+    <section class="analytics-section">
+      <div class="section-header"><div><h2>Submission Activity</h2><p class="section-description">{{ a.periodName }} · Daily submissions (UTC)</p></div>
+        <span class="series-key"><i></i> Submissions</span></div>
+      @if (hasSubmissions()) {
+        <app-analytics-chart [config]="trendChart()" label="Daily evaluation submissions for the selected period and department" />
+      } @else {
+        <div class="chart-empty"><app-icon name="chart" size="xl" /><span>No submissions in this period</span></div>
+      }
+    </section>
+    <section class="analytics-section completion-section">
+      <div class="section-header"><h2>Participation</h2><span class="badge badge-muted">Current roster</span></div>
+      @if (a.eligible > 0) {
+        <div class="completion-visual">
+          <app-analytics-chart [config]="completionChart()" [label]="a.completed + ' completed, ' + (a.eligible - a.completed) + ' awaiting submission'" />
+          <div class="completion-number"><strong>{{ completion() }}%</strong><span>completed</span></div>
+        </div>
+        <div class="completion-legend">
+          <span><i class="completed-dot"></i> Completed <strong>{{ a.completed | number }}</strong></span>
+          <span><i class="pending-dot"></i> Awaiting <strong>{{ a.eligible - a.completed | number }}</strong></span>
+        </div>
+      } @else {
+        <div class="chart-empty"><app-icon name="users" size="xl" /><span>No eligible memberships</span></div>
+      }
+    </section>
+  </div>
+
+  <div class="chart-row equal">
+    <section class="analytics-section">
+      <div class="section-header"><h2>Submissions by Department</h2></div>
+      @if (hasSubmissions()) {
+        <app-analytics-chart [config]="departmentChart()" label="Evaluation submission counts by department" />
+      } @else { <div class="chart-empty"><app-icon name="building" size="xl" /><span>No department submissions yet</span></div> }
+    </section>
+    <section class="analytics-section">
+      <div class="section-header"><h2>Department Ratings</h2><span class="badge badge-muted">1-5 scale</span></div>
+      @if (hasScores()) {
+        <app-analytics-chart [config]="scoreChart()" label="Average Likert rating by department, out of 5" />
+      } @else { <div class="chart-empty"><app-icon name="star" size="xl" /><span>Scores available after 5 submissions</span></div> }
+    </section>
+  </div>
+
+  <section class="analytics-section department-section">
+    <div class="section-header">
+      <h2>Department Performance</h2>
+      <div class="score-summary">
+        <span>Overall <strong>{{ a.averageRating === null ? '--' : (a.averageRating | number:'1.2-2') }}</strong> / 5</span>
+        <span>Rapid appraisal <strong>{{ a.rapidAppraisalAverageRating === null ? '--' : (a.rapidAppraisalAverageRating | number:'1.2-2') }}</strong> / 10</span>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Department</th><th>Faculty</th><th>Submitted</th><th>Current roster completion</th><th>Rating / 5</th><th>Rapid / 10</th></tr></thead>
+        <tbody>
+          @for (department of a.departments; track department.id) {
+            <tr>
+              <td><a routerLink="/guidance/faculty" [queryParams]="{ department: department.id }">{{ department.name }}</a></td>
+              <td>{{ department.facultyCount }}</td><td>{{ department.submitted }}</td>
+              <td><div class="completion-cell"><progress [value]="department.completed" [max]="department.eligible || 1"
+                [attr.aria-label]="department.name + ' completion'"></progress><span>{{ department.completed }} / {{ department.eligible }}</span></div></td>
+              <td>{{ department.averageRating === null ? '--' : (department.averageRating | number:'1.2-2') }}</td>
+              <td>{{ department.rapidAppraisalAverageRating === null ? '--' : (department.rapidAppraisalAverageRating | number:'1.2-2') }}</td>
+            </tr>
+          } @empty { <tr><td colspan="6" class="empty-state">No departments</td></tr> }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if (flagged().length > 0) {
+    <section class="analytics-section">
+      <div class="section-header"><div><h2>Faculty Requiring Attention</h2><p class="section-description">All evaluation periods</p></div>
+        <a class="btn btn-sm" routerLink="/guidance/faculty" [queryParams]="{ tab: 'flagged' }">View all <app-icon name="chevron-right" size="sm" /></a></div>
+      <div class="flagged-list">
+        @for (person of flagged().slice(0, 4); track person.instructorId) {
+          <a class="flagged-row" [routerLink]="['/guidance/faculty', person.instructorId]">
+            <span class="faculty-avatar"><app-icon name="graduation" size="lg" /></span>
+            <span class="faculty-identity"><strong>{{ person.instructorName }}</strong><span>{{ person.departmentName }}</span></span>
+            <span class="badge badge-warning">{{ person.averageRating === null ? 'Review' : person.averageRating + ' / 5' }}</span>
+            <app-icon name="chevron-right" />
+          </a>
+        }
+      </div>
+    </section>
+  }
+}

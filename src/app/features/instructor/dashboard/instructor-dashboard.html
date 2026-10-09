@@ -1,0 +1,43 @@
+<h1>My Performance</h1>
+<p style="color: var(--color-text-muted); margin: 0 0 1.25rem;">
+  Sample data - your real results will appear here once evaluation periods and submissions exist (Phase 4-5).
+</p>
+
+<div class="card-grid" style="margin-bottom: 1.5rem;">
+  <div class="card stat-card">
+    <div class="stat-label">Overall Rating</div>
+    <div class="stat-value">{{ overallRating }} / 5</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-label">Evaluations Received</div>
+    <div class="stat-value">{{ evaluationsReceived }}</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-label">Completion Rate</div>
+    <div class="stat-value">{{ completionRate }}%</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+  <h3>Category ratings</h3>
+  <div class="card-grid">
+    @for (row of categories; track row.category) {
+      <div class="stat-card">
+        <div class="stat-label">{{ row.category }}</div>
+        <div class="stat-value">{{ row.rating }}</div>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="card">
+  <h3>Anonymous comments</h3>
+  <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-top: -0.4rem;">
+    Student identity is never attached to individual comments (architecture doc §10).
+  </p>
+  <ul style="padding-left: 1.1rem;">
+    @for (comment of comments; track comment) {
+      <li style="margin-bottom: 0.4rem;">"{{ comment }}"</li>
+    }
+  </ul>
+</div>

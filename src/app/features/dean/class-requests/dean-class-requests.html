@@ -1,0 +1,119 @@
+<h2>Request review</h2>
+
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else {
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <h3 style="margin-top: 0;">Pending ({{ pending().length }})</h3>
+
+    @if (pending().length === 0) {
+      <p class="empty-state">No pending requests.</p>
+    } @else {
+      <div class="table-wrap" style="border: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Instructor</th>
+              <th>Subject</th>
+              <th>Section</th>
+              <th>Term</th>
+              <th>Proposed students</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of pending(); track request.id) {
+              <tr>
+                <td>{{ request.instructorName }}</td>
+                <td>{{ request.subjectCode }} - {{ request.subjectTitle }}</td>
+                <td>{{ request.sectionCode }}<div class="text-xs text-muted">{{ request.departmentName }}</div></td>
+                <td>{{ request.term }}</td>
+                <td>{{ request.proposedStudentCount }}</td>
+                <td style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-primary"
+                    [disabled]="busyId() === request.id"
+                    (click)="approve(request)"
+                  >
+                    Approve
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger" (click)="openReject(request)">Reject</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  @if (reviewed().length > 0) {
+    <div class="card">
+      <h3 style="margin-top: 0;">Reviewed</h3>
+      <div class="table-wrap" style="border: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Instructor</th>
+              <th>Subject</th>
+              <th>Section</th>
+              <th>Term</th>
+              <th>Status</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of reviewed(); track request.id) {
+              <tr>
+                <td>{{ request.instructorName }}</td>
+                <td>{{ request.subjectCode }}</td>
+                <td>{{ request.sectionCode }}<div class="text-xs text-muted">{{ request.departmentName }}</div></td>
+                <td>{{ request.term }}</td>
+                <td>
+                  @if (request.status === Status.Approved) {
+                    <span class="badge badge-success">Approved</span>
+                  } @else {
+                    <span class="badge badge-muted">Rejected</span>
+                  }
+                </td>
+                <td>{{ request.rejectionReason ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+}
+
+<app-modal [open]="rejectingRequest() !== null" title="Reject class request" (closed)="rejectingRequest.set(null)">
+  @if (rejectingRequest(); as request) {
+    <p style="margin-top: 0; color: var(--color-text-muted);">
+      {{ request.subjectCode }} / {{ request.sectionCode }} ({{ request.term }}) - {{ request.instructorName }}
+    </p>
+
+    <form [formGroup]="rejectForm" (ngSubmit)="submitReject()" novalidate>
+      <div class="form-field">
+        <label for="reject-reason">Reason</label>
+        <input id="reject-reason" type="text" formControlName="reason" placeholder="Explain why this request is rejected" />
+      </div>
+
+      @if (rejectError()) {
+        <div class="banner-error">{{ rejectError() }}</div>
+      }
+
+      <div class="form-actions">
+        <button type="button" class="btn" (click)="rejectingRequest.set(null)">Cancel</button>
+        <button type="submit" class="btn btn-danger" [disabled]="rejectSubmitting()">
+          {{ rejectSubmitting() ? 'Rejecting…' : 'Reject request' }}
+        </button>
+      </div>
+    </form>
+  }
+</app-modal>

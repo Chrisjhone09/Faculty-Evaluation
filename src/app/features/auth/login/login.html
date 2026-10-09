@@ -1,0 +1,28 @@
+<div class="login-page">
+  <form class="login-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h1>Faculty Evaluation System</h1>
+    <p class="subtitle">Sign in to continue</p>
+
+    <label for="email">Email or student ID number</label>
+    <input id="email" type="text" formControlName="email" autocomplete="username" />
+    @if (form.controls.email.invalid && form.controls.email.touched) {
+      <p class="field-error">Email or student ID number is required.</p>
+    }
+
+    <label for="password">Password</label>
+    <input id="password" type="password" formControlName="password" autocomplete="current-password" />
+    @if (form.controls.password.invalid && form.controls.password.touched) {
+      <p class="field-error">Password is required.</p>
+    }
+
+    @if (errorMessage()) {
+      <p class="form-error">{{ errorMessage() }}</p>
+    }
+
+    <button type="submit" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Signing in…' : 'Sign in' }}
+    </button>
+
+    <p class="switch-link">Student? <a routerLink="/register">Create an account</a></p>
+  </form>
+</div>

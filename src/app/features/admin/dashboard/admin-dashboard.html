@@ -1,0 +1,39 @@
+<h1>Admin Dashboard</h1>
+<p class="hint" style="margin-bottom: 1.25rem; color: var(--color-text-muted);">
+  System-wide user and department counts.
+</p>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else {
+  <div class="card-grid" style="margin-bottom: 1.5rem;">
+    <div class="card stat-card">
+      <div class="stat-label">Total Users</div>
+      <div class="stat-value">{{ totalUsers() }}</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">Departments</div>
+      <div class="stat-value">{{ totalDepartments() }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Users by role</h3>
+    @if (usersByRole().length === 0) {
+      <p class="empty-state">No users yet.</p>
+    } @else {
+      <div class="card-grid">
+        @for (entry of usersByRole(); track entry.role) {
+          <div class="stat-card">
+            <div class="stat-label">{{ entry.role }}</div>
+            <div class="stat-value">{{ entry.count }}</div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

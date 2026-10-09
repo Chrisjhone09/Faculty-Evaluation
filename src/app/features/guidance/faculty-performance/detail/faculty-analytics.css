@@ -1,0 +1,38 @@
+.performance-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; padding: 24px 0; border-top: 1px solid var(--color-border); }
+.performance-metrics > div { min-width: 0; padding-left: 16px; border-left: 2px solid #dce2e5; }
+.performance-metrics > div:first-child { border-left-color: #0f766e; }
+.performance-metrics > div:nth-child(2) { border-left-color: #4e9db6; }
+.performance-metrics > div:nth-child(4) { border-left-color: #d99522; }
+.metric-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted); }
+.performance-metrics strong { display: block; font-size: 30px; margin: 10px 0 8px; font-variant-numeric: tabular-nums; }
+.performance-metrics small { font-size: 14px; font-weight: 400; color: var(--color-text-muted); }
+.metric-note { display: block; font-size: 12px; color: var(--color-text-muted); line-height: 1.6; }
+.metric-note.positive { color: #0f766e; }
+.metric-note.negative { color: #b42318; }
+.performance-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.category-legend { margin-top: 12px; }
+.category-legend > div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 16px; font-size: 12px; padding: 9px 0; border-top: 1px solid var(--color-border); }
+.category-legend span { overflow-wrap: anywhere; }
+.distribution-values { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 12px; border-top: 1px solid var(--color-border); padding-top: 12px; }
+.distribution-values div { text-align: center; }
+.distribution-values span { display: flex; gap: 4px; justify-content: center; align-items: center; color: var(--color-text-muted); font-size: 12px; }
+.distribution-values strong { display: block; margin-top: 6px; font-size: 16px; }
+.period-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; min-width: 0; }
+.period-layout > * { min-width: 0; }
+.period-table { min-width: 0; }
+.period-table th, .period-table td { padding: 12px 10px; font-size: 12px; white-space: normal; }
+.period-table td:first-child { overflow-wrap: anywhere; }
+.summary-section .section-title { margin-bottom: var(--space-4); }
+.summary-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-bottom: var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted); }
+.summary-meta > span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.summary-loading { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--color-text-muted); }
+.summary-text { max-width: 85ch; overflow-wrap: anywhere; }
+@media (max-width: 1100px) { .performance-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .period-layout { grid-template-columns: 1fr; } }
+@media (max-width: 700px) {
+  .performance-charts { grid-template-columns: 1fr; gap: 0; }
+  .performance-metrics { gap: 24px 12px; }
+  .performance-metrics > div { padding-left: 12px; }
+  .metric-label { font-size: 12px; align-items: flex-start; }
+  .performance-metrics strong { font-size: 26px; }
+  .category-legend > div { gap: 10px; }
+}

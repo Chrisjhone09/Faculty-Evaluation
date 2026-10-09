@@ -1,0 +1,164 @@
+<a [routerLink]="rosterListPath" class="back-link"><app-icon name="arrow-left" /> {{ workspaceRoot === '/guidance' ? 'Back to subjects & rosters' : 'Back to class offerings' }}</a>
+@if (errorMessage()) { <div class="banner-error" role="alert">{{ errorMessage() }}</div> }
+@if (offering(); as o) {
+  <header class="class-header">
+    <div class="class-title"><span class="eyebrow">{{ o.departmentName }}</span>
+      <h1>{{ o.subjectCode }} <span>{{ o.subjectTitle }}</span></h1>
+      <p>{{ o.sectionCode }} <span>&middot;</span> {{ o.term }} <span class="badge badge-muted">{{ o.status }}</span></p>
+    </div>
+    <div class="instructor-identity">
+      <app-profile-avatar kind="instructors" [profileId]="o.instructorId" [name]="o.instructorName ?? 'Unassigned'" [editable]="workspaceRoot === '/guidance'" />
+      <div><span class="eyebrow">Instructor</span>
+        @if (o.instructorId && workspaceRoot === '/guidance') {
+          <a [routerLink]="['/guidance/faculty', o.instructorId]">{{ o.instructorName }} <app-icon name="chevron-right" size="sm" /></a>
+        } @else { <strong>{{ o.instructorName ?? 'Unassigned' }}</strong> }
+      </div>
+    </div>
+  </header>
+}
+<section class="completion-overview" aria-label="Class submission overview" [attr.aria-busy]="evaluationStatusLoading()">
+  <div class="section-title"><div><h2>Evaluation Overview</h2>
+    <p>{{ evaluationStatusLoading() ? 'Loading current period...' : evaluationStatus()?.evaluationPeriodName ?? 'Current period' }}</p></div>
+    <button class="btn btn-icon" type="button" title="Refresh submission status" aria-label="Refresh submission status" (click)="refreshEvaluationStatus()" [disabled]="evaluationStatusLoading()"><app-icon name="refresh" /></button>
+  </div>
+  @if (evaluationStatusError()) { <div class="banner-error" role="alert">{{ evaluationStatusError() }}</div> }
+  @if (evaluationStatusMessage()) { <p class="empty-state">{{ evaluationStatusMessage() }}</p> }
+  <div class="class-metrics">
+    <div><span><app-icon name="users" /> Enrolled students</span><strong>{{ loading() ? '--' : activeStudents().length }}</strong></div>
+    <div class="submitted-metric"><span><app-icon name="check-circle" /> Submitted</span><strong>{{ evaluationStatus()?.submittedCount ?? '--' }}</strong></div>
+    <div class="pending-metric"><span><app-icon name="clock" /> Awaiting submission</span><strong>{{ evaluationStatus() ? evaluationStatus()!.totalStudents - evaluationStatus()!.submittedCount : '--' }}</strong></div>
+    <div><span><app-icon name="chart" /> Completion</span><strong>{{ evaluationStatus() ? completion() + '%' : '--' }}</strong></div>
+  </div>
+  @if (evaluationStatus(); as status) {
+    <div class="class-progress"><progress [value]="status.submittedCount" [max]="status.totalStudents || 1" aria-label="Class evaluation completion"></progress>
+      <span><strong>{{ status.submittedCount }} of {{ status.totalStudents }}</strong> students submitted</span></div>
+  }
+</section>
+
+<section class="student-section">
+  <div class="section-title roster-heading"><div><h2>Students <span class="badge badge-muted">{{ activeStudents().length }}</span></h2><p>Completion records only. Evaluation answers remain anonymous.</p></div>
+    <div class="roster-actions">
+      <button class="btn" type="button" (click)="editor.set('import')"><app-icon name="upload" /> Import CSV</button>
+      <button class="btn btn-primary" type="button" (click)="editor.set('add')"><app-icon name="plus" /> Add student</button>
+    </div>
+  </div>
+  <div class="roster-toolbar">
+    <div class="search-field"><app-icon name="search" /><input type="search" aria-label="Search students" placeholder="Search name or student number" [value]="search()" (input)="search.set($any($event.target).value)" /></div>
+    <div class="status-filters" role="group" aria-label="Submission filter">
+      <button type="button" [attr.aria-pressed]="statusFilter() === 'all'" (click)="statusFilter.set('all')">All</button>
+      <button type="button" [attr.aria-pressed]="statusFilter() === 'pending'" (click)="statusFilter.set('pending')" [disabled]="!evaluationStatus()">Awaiting</button>
+      <button type="button" [attr.aria-pressed]="statusFilter() === 'submitted'" (click)="statusFilter.set('submitted')" [disabled]="!evaluationStatus()">Submitted</button>
+    </div>
+  </div>
+  @if (loading()) { <p class="loading-row" role="status"><span class="spinner"></span> Loading students...</p> }
+  @else {
+    <div class="table-wrap roster-table"><table class="data-table">
+      <thead><tr><th>Student</th><th>Evaluation status</th><th>Submitted on</th><th>Enrollment source</th><th><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        @for (student of filteredStudents(); track student.id) {
+          @let status = statusRows().get(student.studentId);
+          <tr><td><div class="student-identity">
+            <app-profile-avatar [profileId]="student.studentId" [name]="student.studentName" [editable]="workspaceRoot === '/guidance'" />
+            <div><strong>{{ student.studentName }}</strong><span>{{ student.studentNumber }}</span></div>
+          </div></td>
+          <td><span class="badge" [class.badge-success]="status?.submitted" [class.badge-warning]="status && !status.submitted" [class.badge-muted]="!status">{{ status ? (status.submitted ? 'Submitted' : 'Awaiting submission') : 'Unavailable' }}</span></td>
+          <td class="submitted-date">{{ status?.submittedAtUtc ? (status!.submittedAtUtc | date:'MMM d, y, h:mm a') : '--' }}</td>
+          <td class="enrollment-source">{{ student.source === 'ManualAdd' ? 'Manual' : student.source === 'InstructorRequestApproved' ? 'Approved request' : 'Masterlist' }}</td>
+          <td class="student-actions"><button class="btn btn-icon btn-danger" type="button" [attr.aria-label]="'Remove ' + student.studentName" [title]="'Remove ' + student.studentName" [disabled]="busyStudentId() === student.studentId" (click)="removeStudent(student)"><app-icon name="trash" /></button></td></tr>
+        } @empty { <tr><td colspan="5" class="empty-state">{{ activeStudents().length ? 'No students match your filters.' : 'No students enrolled yet.' }}</td></tr> }
+      </tbody>
+    </table></div>
+    <p class="roster-count">{{ filteredStudents().length }} of {{ activeStudents().length }} students</p>
+  }
+</section>
+@if (workspaceRoot === '/guidance') {
+  @if (masterlistError()) { <div class="banner-error" role="alert">{{ masterlistError() }} <button class="btn btn-sm" type="button" (click)="refreshMasterlist()">Retry</button></div> }
+  @if (pendingRegistrations().length) {
+    <section class="student-section" aria-label="Awaiting registration">
+      <h2>Awaiting registration <span class="badge badge-muted">{{ pendingRegistrations().length }}</span></h2>
+      <div class="table-wrap"><table class="data-table masterlist-table">
+        <thead><tr><th>Student number</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          @for (entry of pendingRegistrations(); track entry.id) {
+            <tr><td>{{ entry.studentNumber }}</td><td class="student-actions">
+              <button class="btn btn-icon btn-danger" type="button" [attr.aria-label]="'Remove student number ' + entry.studentNumber" [title]="'Remove student number ' + entry.studentNumber" [disabled]="busyMasterlistId() === entry.id" (click)="removePendingRegistration(entry)"><app-icon name="trash" /></button>
+            </td></tr>
+          }
+        </tbody>
+      </table></div>
+    </section>
+  }
+}
+<app-modal [open]="editor() === 'add'" title="Add student" (closed)="editor.set(null)">
+  <form [formGroup]="addForm" (ngSubmit)="submitAdd()" novalidate>
+    <div class="form-field"><label for="add-student-number">Student number</label>
+      <input id="add-student-number" type="text" formControlName="studentNumber" placeholder="e.g. 2023-00123" />
+      @if (addForm.controls.studentNumber.touched && addForm.controls.studentNumber.invalid) { <span class="field-error">Student number is required.</span> }
+    </div>
+    @if (addError()) { <div class="banner-error" role="alert">{{ addError() }}</div> }
+    <div class="modal-actions"><button type="button" class="btn" (click)="editor.set(null)">Cancel</button><button type="submit" class="btn btn-primary" [disabled]="addSubmitting()"><app-icon name="plus" /> {{ addSubmitting() ? 'Adding...' : 'Add student' }}</button></div>
+  </form>
+</app-modal>
+<app-modal [open]="editor() === 'import'" title="Import class masterlist" (closed)="editor.set(null)">
+  <label for="masterlist-file" class="file-label">CSV file &middot; StudentNumber or StudentName columns</label>
+  <div class="upload-row">
+    <input id="masterlist-file" type="file" accept=".csv,text/csv" [disabled]="validating() || importing()" (change)="onFileSelected($event)" />
+    <button type="button" class="btn btn-sm" [disabled]="!selectedFile() || validating() || importing()" (click)="validateFile()">
+      {{ validating() ? 'Validating…' : 'Validate' }}
+    </button>
+  </div>
+
+  @if (validationError()) {
+    <div class="banner-error" role="alert">{{ validationError() }}</div>
+  }
+
+  @if (importResult(); as result) {
+    <div class="banner-success">
+      Imported {{ result.importedCount }} student(s). Skipped {{ result.skippedCount }}.
+    </div>
+    @if (result.pendingRegistrationCount) {
+      <p role="status">{{ result.pendingRegistrationCount }} student number(s) saved, awaiting registration.</p>
+    }
+  }
+
+  @if (report(); as r) {
+    <div style="margin-top: 0.75rem;">
+      <p>
+        {{ r.totalRows }} row(s) parsed - <strong>{{ r.valid.length }}</strong> valid,
+        {{ r.duplicate.length }} {{ workspaceRoot === '/guidance' ? 'duplicates' : 'already members' }}, {{ r.notFound.length }} not found,
+        {{ r.ambiguous.length }} ambiguous, {{ r.malformed.length }} malformed.
+      </p>
+
+      @if (r.valid.length > 0) {
+        <button type="button" class="btn btn-primary" [disabled]="importing()" (click)="importValidRows()">
+          {{ importing() ? 'Importing…' : 'Import ' + r.valid.length + ' valid record(s)' }}
+        </button>
+      }
+
+      @if (r.notFound.length > 0) {
+        <div style="margin-top: 0.75rem;">
+          <strong>Not found:</strong>
+          <span class="hint" style="color: var(--color-text-muted);">{{ r.notFound.map((row) => row.studentNumber).join(', ') }}</span>
+        </div>
+      }
+      @if (r.duplicate.length > 0) {
+        <div style="margin-top: 0.5rem;">
+          <strong>{{ workspaceRoot === '/guidance' ? 'Already listed:' : 'Already members:' }}</strong>
+          <span class="hint" style="color: var(--color-text-muted);">{{ r.duplicate.map((row) => row.studentNumber).join(', ') }}</span>
+        </div>
+      }
+      @if (r.ambiguous.length > 0) {
+        <div style="margin-top: 0.5rem;">
+          <strong>Ambiguous (matched more than one student by name - add manually instead):</strong>
+          <span class="hint" style="color: var(--color-text-muted);">{{ r.ambiguous.map((row) => row.studentNumber).join(', ') }}</span>
+        </div>
+      }
+      @if (r.malformed.length > 0) {
+        <div style="margin-top: 0.5rem;">
+          <strong>Malformed rows:</strong>
+          <span class="hint" style="color: var(--color-text-muted);">{{ r.malformed.map((row) => 'row ' + row.rowNumber).join(', ') }}</span>
+        </div>
+      }
+    </div>
+  }
+</app-modal>

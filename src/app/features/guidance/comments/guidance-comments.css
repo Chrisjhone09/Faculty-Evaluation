@@ -1,0 +1,12 @@
+:host { display: block; }
+.btn.btn-icon { width: 34px; min-width: 34px; max-width: 34px; height: 34px; flex: 0 0 34px; }
+.comments-table { table-layout: fixed; }
+.comments-table th:nth-child(1), .comments-table th:nth-child(2) { width: 17%; }
+.comments-table th:nth-child(3) { width: 26%; }
+.comments-table td { overflow-wrap: anywhere; vertical-align: top; }
+.comments-table td > div { min-width: 0; }
+@media (max-width: 640px) {
+  .comments-table td { text-align: left; align-items: flex-start; }
+  .comments-table td::before { width: 76px; }
+  .comments-table td > div { flex: 1; }
+}

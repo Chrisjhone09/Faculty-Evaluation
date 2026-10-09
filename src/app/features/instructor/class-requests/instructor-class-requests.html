@@ -1,0 +1,167 @@
+<h2>{{ isGuidance ? 'Create class request' : 'Class Requests' }}</h2>
+
+
+<div class="card" style="margin-bottom: 1.5rem;">
+  <h3 style="margin-top: 0;">Request a class</h3>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (isGuidance) {
+      <div class="form-field">
+        <label for="req-instructor">Instructor</label>
+        <select id="req-instructor" formControlName="instructorId">
+          <option value="">Select an instructor...</option>
+          @for (instructor of instructors(); track instructor.id) {
+            <option [value]="instructor.id">{{ instructor.firstName }} {{ instructor.lastName }} ({{ instructor.departmentName }})</option>
+          }
+        </select>
+      </div>
+    }
+    <div class="form-field">
+      <label for="req-subject">Subject</label>
+      <select id="req-subject" formControlName="subjectId">
+        <option value="" disabled>Select a subject…</option>
+        @for (subject of subjects(); track subject.id) {
+          <option [value]="subject.id">{{ subject.code }} - {{ subject.title }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="req-section">Section</label>
+      <select id="req-section" formControlName="sectionId">
+        <option value="" disabled>Select a section…</option>
+        @for (section of availableSections(); track section.id) {
+          <option [value]="section.id">{{ section.code }} ({{ section.departmentName }})</option>
+        }
+      </select>
+      
+    </div>
+    <div class="form-field">
+      <label for="req-term">Term</label>
+      <input id="req-term" type="text" formControlName="term" placeholder="e.g. AY 2026-2027, 1st Semester" />
+    </div>
+    <div class="form-field">
+      <label for="req-students">Proposed students (optional)</label>
+      <textarea
+        id="req-students"
+        rows="4"
+        formControlName="proposedStudentNumbersRaw"
+        placeholder="Student numbers, one per line or comma-separated"
+      ></textarea>
+      <span class="hint">Numbers that don't match an existing student are skipped, not rejected.</span>
+    </div>
+
+    <div class="form-field">
+      <label>Or upload a masterlist (CSV, optional)</label>
+      <span class="hint" style="display: block; margin-bottom: 0.5rem;">
+        A CSV file with a "StudentNumber" header column - or, if that column isn't present, a "StudentName"
+        column formatted "Lastname, Firstname Middlename", or separate "FirstName"/"LastName" columns
+        ("MiddleName" is optional either way). Valid rows are merged with the list above.
+      </span>
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <input type="file" accept=".csv,text/csv" (change)="onFileSelected($event)" />
+        <button type="button" class="btn btn-sm" [disabled]="!selectedFile() || parsing()" (click)="parseFile()">
+          {{ parsing() ? 'Reading…' : 'Read file' }}
+        </button>
+      </div>
+
+      @if (parseError()) {
+        <div class="banner-error" style="margin-top: 0.5rem;">{{ parseError() }}</div>
+      }
+
+      @if (parseReport(); as r) {
+        <p class="hint" style="margin-top: 0.5rem;">
+          {{ r.totalRows }} row(s) read - {{ r.valid.length }} valid, {{ r.duplicate.length }} duplicate,
+          {{ r.notFound.length }} not found, {{ r.ambiguous.length }} ambiguous, {{ r.malformed.length }} malformed.
+        </p>
+        @if (r.ambiguous.length > 0) {
+          <p class="hint" style="color: var(--color-text-muted);">
+            Ambiguous (matched more than one student by name - type these in manually instead):
+            {{ r.ambiguous.map((row) => row.studentNumber).join(', ') }}
+          </p>
+        }
+      }
+
+      @if (csvStudentNumbers().length > 0) {
+        <div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem;">
+          @for (number of csvStudentNumbers(); track number) {
+            <span class="badge badge-success" style="cursor: pointer;" (click)="removeCsvNumber(number)" title="Click to remove">
+              {{ number }} ✕
+            </span>
+          }
+        </div>
+      }
+    </div>
+
+    @if (submitError()) {
+      <div class="banner-error">{{ submitError() }}</div>
+    }
+
+    @if (successMessage()) {
+      <div class="banner-success">
+        {{ successMessage() }}
+        @if (skippedNumbers().length > 0) {
+          <div>Skipped (no matching student): {{ skippedNumbers().join(', ') }}</div>
+        }
+      </div>
+    }
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+        {{ submitting() ? 'Submitting…' : 'Submit request' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3 style="margin-top: 0;">{{ isGuidance ? 'All requests' : 'My requests' }}</h3>
+
+  @if (errorMessage()) {
+    <div class="banner-error">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+  } @else if (myRequests().length === 0) {
+    <p class="empty-state">No class requests yet.</p>
+  } @else {
+    <div class="table-wrap" style="border: none;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Section</th>
+            <th>Term</th>
+            <th>Proposed students</th>
+            <th>Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (request of myRequests(); track request.id) {
+            <tr>
+              <td>{{ request.subjectCode }} - {{ request.subjectTitle }}</td>
+              <td>{{ request.sectionCode }}</td>
+              <td>{{ request.term }}</td>
+              <td>{{ request.proposedStudentCount }}</td>
+              <td>
+                @switch (request.status) {
+                  @case (Status.Approved) {
+                    <span class="badge badge-success">Approved</span>
+                  }
+                  @case (Status.Rejected) {
+                    <span class="badge badge-muted">Rejected</span>
+                  }
+                  @default {
+                    <span class="badge badge-warning">Pending</span>
+                  }
+                }
+              </td>
+              <td>{{ request.rejectionReason ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -1,0 +1,150 @@
+<div class="page-header">
+  <div>
+    <h2>Evaluation Periods</h2>
+    <p style="color: var(--color-text-muted); margin: 0;">Schedule the windows during which students can submit evaluations.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreateModal()"><app-icon name="plus" /> New period</button>
+</div>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (periods().length === 0) {
+  <div class="table-wrap">
+    <p class="empty-state">No evaluation periods yet. Create the first one above.</p>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Form</th>
+          <th>Starts</th>
+          <th>Ends</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (period of periods(); track period.id) {
+          <tr>
+            <td>{{ period.name }}</td>
+            <td>{{ period.evaluationFormName }}</td>
+            <td>{{ period.startDate | date: 'medium' }}</td>
+            <td>{{ period.endDate | date: 'medium' }}</td>
+            <td>
+              @switch (period.status) {
+                @case (Status.Active) {
+                  <span class="badge badge-success">Active</span>
+                }
+                @case (Status.Closed) {
+                  <span class="badge badge-muted">Closed</span>
+                }
+                @default {
+                  <span class="badge badge-warning">Scheduled</span>
+                }
+              }
+            </td>
+            <td style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+              @if (period.status !== Status.Closed) {
+                <button type="button" class="btn btn-sm" [disabled]="busyId() === period.id" (click)="openEditModal(period)">
+                  Edit
+                </button>
+              }
+              @if (period.status === Status.Scheduled) {
+                <button type="button" class="btn btn-sm btn-primary" [disabled]="busyId() === period.id" (click)="activate(period)">
+                  Activate
+                </button>
+              }
+              @if (period.status !== Status.Closed) {
+                <button type="button" class="btn btn-sm" [disabled]="busyId() === period.id" (click)="close(period)">Close</button>
+              }
+              @if (period.status === Status.Scheduled) {
+                <button type="button" class="btn btn-sm btn-danger" [disabled]="busyId() === period.id" (click)="deletePeriod(period)">
+                  Delete
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-modal [open]="showCreateModal()" title="New evaluation period" (closed)="showCreateModal.set(false)">
+  <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
+    <div class="form-field">
+      <label for="period-name">Name</label>
+      <input id="period-name" type="text" formControlName="name" placeholder="e.g. AY 2026-2027, 1st Semester" />
+    </div>
+    <div class="form-field">
+      <label for="period-form">Evaluation form</label>
+      <select id="period-form" formControlName="evaluationFormId">
+        <option value="" disabled>Select a form…</option>
+        @for (form of forms(); track form.id) {
+          <option [value]="form.id">{{ form.name }}{{ form.isActive ? ' (active)' : '' }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="period-start">Start</label>
+      <input id="period-start" type="datetime-local" formControlName="startDate" />
+    </div>
+    <div class="form-field">
+      <label for="period-end">End</label>
+      <input id="period-end" type="datetime-local" formControlName="endDate" />
+    </div>
+
+    @if (createError()) {
+      <div class="banner-error">{{ createError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="showCreateModal.set(false)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="createSubmitting()">
+        {{ createSubmitting() ? 'Creating…' : 'Create period' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal [open]="editingPeriod() !== null" title="Edit evaluation period" (closed)="editingPeriod.set(null)">
+  <form [formGroup]="editForm" (ngSubmit)="submitEdit()" novalidate>
+    <div class="form-field">
+      <label for="edit-period-name">Name</label>
+      <input id="edit-period-name" type="text" formControlName="name" />
+    </div>
+    <div class="form-field">
+      <label for="edit-period-form">Evaluation form</label>
+      <select id="edit-period-form" formControlName="evaluationFormId">
+        @for (form of forms(); track form.id) {
+          <option [value]="form.id">{{ form.name }}{{ form.isActive ? ' (active)' : '' }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="edit-period-start">Start</label>
+      <input id="edit-period-start" type="datetime-local" formControlName="startDate" />
+    </div>
+    <div class="form-field">
+      <label for="edit-period-end">End</label>
+      <input id="edit-period-end" type="datetime-local" formControlName="endDate" />
+    </div>
+
+    @if (editError()) {
+      <div class="banner-error">{{ editError() }}</div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn" (click)="editingPeriod.set(null)">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="editSubmitting()">
+        {{ editSubmitting() ? 'Saving…' : 'Save changes' }}
+      </button>
+    </div>
+  </form>
+</app-modal>

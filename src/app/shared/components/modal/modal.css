@@ -1,0 +1,52 @@
+/* Modal backdrop uses a deep plum wash so it stays in the brand family
+   rather than a neutral black. */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--color-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: var(--z-modal);
+}
+
+.panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 440px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+header h2 {
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.body {
+  padding: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .backdrop {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .panel {
+    max-width: none;
+    max-height: 94dvh;
+  }
+}

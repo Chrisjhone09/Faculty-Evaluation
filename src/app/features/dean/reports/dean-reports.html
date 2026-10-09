@@ -1,0 +1,87 @@
+<h1>Reports</h1>
+<p style="color: var(--color-text-muted); margin: 0 0 1.25rem;">Department-wide summary, on screen only (export isn't built yet).</p>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (summary(); as s) {
+  <div class="card-grid" style="margin-bottom: 1.5rem;">
+    <div class="card stat-card">
+      <div class="stat-label">Active Offerings</div>
+      <div class="stat-value">{{ s.totalActiveOfferings }}</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">Archived Offerings</div>
+      <div class="stat-value">{{ s.totalArchivedOfferings }}</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">Instructors</div>
+      <div class="stat-value">{{ s.totalInstructors }}</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">Students (active)</div>
+      <div class="stat-value">{{ s.totalStudentsAcrossActiveOfferings }}</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">Pending Class Requests</div>
+      <div class="stat-value">{{ s.pendingClassRequests }}</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <h3 style="margin-top: 0;">Offerings by term</h3>
+    @if (s.offeringsByTerm.length === 0) {
+      <p class="empty-state">No offerings yet.</p>
+    } @else {
+      <div class="table-wrap" style="border: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Term</th>
+              <th>Offerings</th>
+              <th>Students</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of s.offeringsByTerm; track row.term) {
+              <tr>
+                <td>{{ row.term }}</td>
+                <td>{{ row.offeringCount }}</td>
+                <td>{{ row.studentCount }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top: 0;">Evaluation results</h3>
+    @if (!s.hasEvaluationData) {
+      <p class="empty-state">No evaluations have been submitted yet.</p>
+    } @else if (!s.meetsAnonymityThreshold) {
+      <p class="empty-state">
+        {{ s.totalEvaluationsSubmitted }} evaluation(s) submitted so far - not enough yet to show a department-wide
+        score while keeping individual responses anonymous.
+      </p>
+    } @else {
+      <div class="card-grid">
+        <div class="card stat-card">
+          <div class="stat-label">Evaluations Submitted</div>
+          <div class="stat-value">{{ s.totalEvaluationsSubmitted }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Department Average Rating</div>
+          <div class="stat-value">{{ s.departmentAverageRating }} / 5</div>
+        </div>
+      </div>
+      <p class="hint" style="color: var(--color-text-muted); margin-bottom: 0;">
+        See Faculty Performance for a per-instructor breakdown with category ratings and comments.
+      </p>
+    }
+  </div>
+}

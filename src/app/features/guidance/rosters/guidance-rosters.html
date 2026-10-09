@@ -1,0 +1,132 @@
+<app-page-header title="Subjects & Rosters">
+  <button class="btn btn-primary" type="button" (click)="openAssignment()"><app-icon name="plus" /> Assign subject</button>
+  <button class="btn" type="button" (click)="downloadTemplate()"><app-icon name="download" /> CSV template</button>
+  <button class="btn btn-icon" type="button" aria-label="Refresh rosters" title="Refresh rosters" [disabled]="loading()" (click)="refresh()"><app-icon name="refresh" /></button>
+</app-page-header>
+
+<div class="roster-filters">
+  <div class="form-field">
+    <label for="roster-search">Search subjects</label>
+    <input id="roster-search" type="search" [value]="search()" (input)="search.set($any($event.target).value)" />
+  </div>
+  <div class="form-field">
+    <label for="roster-department">Department</label>
+    <select id="roster-department" [value]="department()" (change)="department.set($any($event.target).value)">
+      <option value="">All departments</option>
+      @for (d of departments(); track d[0]) { <option [value]="d[0]">{{ d[1] }}</option> }
+    </select>
+  </div>
+  <div class="form-field">
+    <label for="roster-status">Status</label>
+    <select id="roster-status" [value]="status()" (change)="status.set($any($event.target).value)">
+      <option value="Active">Active</option>
+      <option value="Archived">Archived</option>
+      <option value="">All statuses</option>
+    </select>
+  </div>
+</div>
+
+@if (catalogError()) {
+  <div class="banner-error" role="alert">{{ catalogError() }} <button class="btn btn-sm" type="button" (click)="loadCatalog()">Retry assignment options</button></div>
+}
+
+@if (error()) {
+  <div class="banner-error" role="alert">{{ error() }} <button class="btn btn-sm" type="button" (click)="refresh()">Retry</button></div>
+} @else if (loading()) {
+  <p class="loading-row" role="status"><span class="spinner"></span> Loading rosters...</p>
+} @else {
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Subject</th><th>Department</th><th>Instructor</th><th>Enrolled</th><th>Status</th><th><span class="sr-only">Roster actions</span></th></tr></thead>
+      <tbody>
+        @for (offering of visibleOfferings(); track offering.id) {
+          <tr>
+            <td><strong>{{ offering.subjectCode }} - {{ offering.subjectTitle }}</strong><span class="class-meta">{{ offering.sectionCode }} &middot; {{ offering.term }}</span></td>
+            <td data-label="Department">{{ offering.departmentName }}</td>
+            <td data-label="Instructor"><div class="instructor-assignment">
+              <span>{{ offering.instructorName ?? 'Unassigned' }}</span>
+              @if (offering.status === 'Active') {
+                <button class="btn btn-icon" type="button" [attr.aria-label]="'Assign instructor for ' + offering.subjectCode + ' ' + offering.sectionCode" title="Assign instructor" [disabled]="catalogLoading() || !!catalogError()" (click)="openInstructor(offering)"><app-icon name="edit" /></button>
+              }
+            </div></td>
+            <td data-label="Enrolled">{{ offering.studentCount }}</td>
+            <td data-label="Status"><span class="badge" [class.badge-success]="offering.status === 'Active'" [class.badge-muted]="offering.status !== 'Active'">{{ offering.status }}</span></td>
+            <td><div class="roster-actions">
+              <a class="btn btn-sm" [routerLink]="['/guidance/rosters', offering.id]">Open roster <app-icon name="chevron-right" /></a>
+              @if (offering.status === 'Active' && offering.instructorId) {
+                <a class="btn btn-sm btn-primary" [routerLink]="['/guidance/rosters', offering.id]" [queryParams]="{ upload: 'true' }"><app-icon name="upload" /> Upload master list</a>
+              } @else if (offering.status === 'Active') {
+                <button class="btn btn-sm btn-primary" type="button" [disabled]="catalogLoading() || !!catalogError()" (click)="openInstructor(offering)"><app-icon name="plus" /> Assign instructor</button>
+              }
+            </div></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-state">{{ offerings().length ? 'No rosters match your filters.' : 'No subject assignments yet.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-modal [open]="creating()" title="Assign instructor to subject" (closed)="!saving() && creating.set(false)">
+  <form [formGroup]="assignmentForm" (ngSubmit)="saveAssignment()" novalidate>
+    @if (catalogLoading()) { <p class="loading-row" role="status"><span class="spinner"></span> Loading assignment options...</p> }
+    @if (catalogError()) { <div class="banner-error" role="alert">{{ catalogError() }} <button class="btn btn-sm" type="button" (click)="loadCatalog()">Retry</button></div> }
+    <fieldset [disabled]="catalogLoading() || !!catalogError() || saving()">
+      <div class="form-field">
+        <label for="assignment-section">Section</label>
+        <select id="assignment-section" formControlName="sectionId">
+          <option value="" disabled>Select a section</option>
+          @for (section of sections(); track section.id) { <option [value]="section.id">{{ section.code }} - {{ section.departmentName }}</option> }
+        </select>
+        @if (assignmentForm.controls.sectionId.touched && assignmentForm.controls.sectionId.invalid) { <span class="field-error">Select a section.</span> }
+      </div>
+      <div class="form-field">
+        <label for="assignment-subject">Subject</label>
+        <select id="assignment-subject" formControlName="subjectId">
+          <option value="" disabled>Select a subject</option>
+          @for (subject of availableSubjects(); track subject.id) { <option [value]="subject.id">{{ subject.code }} - {{ subject.title }}</option> }
+        </select>
+        @if (assignmentForm.controls.subjectId.touched && assignmentForm.controls.subjectId.invalid) { <span class="field-error">Select a subject.</span> }
+      </div>
+      <div class="form-field">
+        <label for="assignment-instructor">Instructor</label>
+        <select id="assignment-instructor" formControlName="instructorId">
+          <option value="" disabled>Select an instructor</option>
+          @for (instructor of availableInstructors(); track instructor.id) { <option [value]="instructor.id">{{ instructor.firstName }} {{ instructor.lastName }}</option> }
+        </select>
+        @if (selectedSectionId() && !availableInstructors().length) { <span class="field-error">No active instructors in this department.</span> }
+        @if (assignmentForm.controls.instructorId.touched && assignmentForm.controls.instructorId.invalid) { <span class="field-error">Select an instructor.</span> }
+      </div>
+      <div class="form-field">
+        <label for="assignment-term">Term</label>
+        <input id="assignment-term" type="text" formControlName="term" maxlength="100" />
+        @if (assignmentForm.controls.term.touched && assignmentForm.controls.term.invalid) { <span class="field-error">Enter a term (up to 100 characters).</span> }
+      </div>
+    </fieldset>
+    @if (saveError()) { <div class="banner-error" role="alert">{{ saveError() }}</div> }
+    <div class="modal-actions">
+      <button class="btn" type="button" [disabled]="saving()" (click)="creating.set(false)">Cancel</button>
+      <button class="btn btn-primary" type="submit" [disabled]="saving() || catalogLoading() || !!catalogError()"><app-icon name="upload" /> {{ saving() ? 'Saving...' : 'Save & upload master list' }}</button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal [open]="!!assigningFor()" title="Assign instructor" (closed)="!assignSaving() && assigningFor.set(null)">
+  @if (assigningFor(); as offering) {
+    <p>{{ offering.subjectCode }} - {{ offering.subjectTitle }}<br />{{ offering.sectionCode }} &middot; {{ offering.term }}</p>
+    <div class="form-field">
+      <label for="roster-instructor">Instructor</label>
+      <select id="roster-instructor" [value]="assignInstructorId()" [disabled]="assignSaving()" (change)="assignInstructorId.set($any($event.target).value)">
+        <option value="" disabled>Select an instructor</option>
+        @for (instructor of assignInstructors(); track instructor.id) { <option [value]="instructor.id">{{ instructor.firstName }} {{ instructor.lastName }}</option> }
+      </select>
+      @if (!assignInstructors().length) { <span class="field-error">No active instructors in this department.</span> }
+    </div>
+    @if (assignError()) { <div class="banner-error" role="alert">{{ assignError() }}</div> }
+    <div class="modal-actions">
+      <button class="btn" type="button" [disabled]="assignSaving()" (click)="assigningFor.set(null)">Cancel</button>
+      <button class="btn btn-primary" type="button" [disabled]="assignSaving() || !assignInstructorId()" (click)="saveInstructor()"><app-icon name="check" /> {{ assignSaving() ? 'Saving...' : 'Save instructor' }}</button>
+    </div>
+  }
+</app-modal>

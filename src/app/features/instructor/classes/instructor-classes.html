@@ -1,0 +1,43 @@
+<h1>My Classes</h1>
+<p style="color: var(--color-text-muted); margin: 0 0 1.25rem;">
+  Classes currently assigned to you. Manage the roster or upload a masterlist from "Manage".
+</p>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (offerings().length === 0) {
+  <div class="table-wrap">
+    <p class="empty-state">No classes are assigned to you yet.</p>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Section</th>
+          <th>Term</th>
+          <th>Students</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (offering of offerings(); track offering.id) {
+          <tr>
+            <td>{{ offering.subjectCode }} - {{ offering.subjectTitle }}</td>
+            <td>{{ offering.sectionCode }}</td>
+            <td>{{ offering.term }}</td>
+            <td>{{ offering.studentCount }}</td>
+            <td style="text-align: right;">
+              <a class="btn btn-sm" [routerLink]="['/instructor/classes', offering.id]">Manage</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -1,0 +1,21 @@
+<div class="page">
+  <header>
+    <div>
+      <h1>{{ title }}</h1>
+      <p>{{ description }}</p>
+    </div>
+    <button type="button" (click)="logout()">Sign out</button>
+  </header>
+
+  @if (authService.currentUser(); as user) {
+    <section class="user-card">
+      <p><strong>{{ user.fullName }}</strong> ({{ user.email }})</p>
+      <p>Roles: {{ user.roles.join(', ') }}</p>
+      @if (user.departmentId) {
+        <p>Department scope: {{ user.departmentId }}</p>
+      }
+    </section>
+  }
+
+  <p class="note">This feature area will be built out in a later phase.</p>
+</div>

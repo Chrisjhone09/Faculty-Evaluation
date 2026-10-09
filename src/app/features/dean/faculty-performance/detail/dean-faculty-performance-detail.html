@@ -1,0 +1,141 @@
+<a routerLink="/dean/faculty" class="back-link">
+  ← Back to Faculty Performance
+</a>
+
+@if (errorMessage()) {
+  <div class="banner-error">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
+} @else if (detail(); as d) {
+  <h1>{{ d.instructorName }}</h1>
+  <p style="color: var(--color-text-muted); margin: 0 0 1.5rem;">{{ d.employeeNumber }} · {{ d.evaluationsSubmittedCount }} evaluations submitted</p>
+
+  @if (!d.meetsAnonymityThreshold) {
+    <div class="card">
+      <p class="empty-state">
+        Not enough responses yet to show anonymized results. Scores and comments are withheld below a minimum number
+        of respondents so a single answer can't be traced back to a student.
+      </p>
+    </div>
+  } @else {
+    <div class="card-grid" style="margin-bottom: 1.5rem;">
+      <div class="card stat-card">
+        <div class="stat-label">Overall Rating</div>
+        <div class="stat-value">{{ d.overallAverageRating }} / 5</div>
+      </div>
+      @if (d.rapidAppraisalAverageRating !== null) {
+        <div class="card stat-card">
+          <div class="stat-label">Rapid Appraisal</div>
+          <div class="stat-value">{{ d.rapidAppraisalAverageRating }} / 10</div>
+        </div>
+      }
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h3 style="margin-top: 0;">By category</h3>
+      @if (d.categoryRatings.length === 0) {
+        <p class="empty-state">No rated questions in this form.</p>
+      } @else {
+        @for (category of d.categoryRatings; track category.categoryId) {
+          <div style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+              <span>{{ category.categoryName }}</span>
+              <span class="hint" style="color: var(--color-text-muted);">{{ category.averageRating }} / 5</span>
+            </div>
+            <div class="meter">
+              <div class="meter-fill" [style.width.%]="(category.averageRating / 5) * 100"></div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h3 style="margin-top: 0;">By question</h3>
+      <div class="table-wrap" style="border: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Average</th>
+              <th>Responses</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (question of d.questionRatings; track question.questionId) {
+              <tr>
+                <td>{{ question.questionText }}</td>
+                <td>{{ question.averageRating }} / 5</td>
+                <td>{{ question.ratingCount }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h3 style="margin-top: 0;">Comments ({{ d.comments.length }})</h3>
+      <p class="hint" style="color: var(--color-text-muted); margin-top: -0.5rem;">
+        Shown in an order unrelated to submission time, never linked to a student. Comments flagged negative are
+        shown here as an AI-softened rewrite that preserves the feedback.
+      </p>
+      @if (d.comments.length === 0) {
+        <p class="empty-state">No written comments submitted.</p>
+      } @else {
+        <ul style="padding-left: 1.25rem; margin: 0;">
+          @for (comment of d.comments; track $index) {
+            <li style="margin-bottom: 0.5rem;">
+              {{ comment.commentText }}
+              @if (comment.isFlaggedNegative) {
+                <span class="badge badge-warning" style="margin-left: 0.4rem;">Flagged negative</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h3 style="margin-top: 0;">Rapid Appraisal comments ({{ d.rapidAppraisalComments.length }})</h3>
+      <p class="hint" style="color: var(--color-text-muted); margin-top: -0.5rem;">
+        Justifications for the 6-10 rapid appraisal rating, shown separately from the category comments above.
+      </p>
+      @if (d.rapidAppraisalComments.length === 0) {
+        <p class="empty-state">No written comments submitted.</p>
+      } @else {
+        <ul style="padding-left: 1.25rem; margin: 0;">
+          @for (comment of d.rapidAppraisalComments; track $index) {
+            <li style="margin-bottom: 0.5rem;">
+              {{ comment.commentText }}
+              @if (comment.isFlaggedNegative) {
+                <span class="badge badge-warning" style="margin-left: 0.4rem;">Flagged negative</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="card">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="margin: 0;">AI summary</h3>
+        <button type="button" class="btn btn-sm" [disabled]="summaryLoading()" (click)="generateSummary()">
+          {{ summaryLoading() ? 'Generating…' : summary() ? 'Regenerate' : 'Generate AI Summary' }}
+        </button>
+      </div>
+      <p class="hint" style="color: var(--color-text-muted); margin: 0.25rem 0 0;">
+        Interprets the ratings above and summarizes the comments' overall tone. Only generated when you click the
+        button - never automatically.
+      </p>
+      @if (summaryError()) {
+        <div class="banner-error" style="margin-top: 0.75rem;">{{ summaryError() }}</div>
+      }
+      @if (summary()) {
+        <p style="margin: 0.75rem 0 0; white-space: pre-wrap;">{{ summary() }}</p>
+      }
+    </div>
+  }
+}

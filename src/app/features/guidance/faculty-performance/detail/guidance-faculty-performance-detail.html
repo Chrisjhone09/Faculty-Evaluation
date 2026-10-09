@@ -1,0 +1,127 @@
+<a routerLink="/guidance/faculty" class="back-link"><app-icon name="arrow-left" /> Back to Faculty Performance</a>
+@if (errorMessage()) { <div class="banner-error" role="alert">{{ errorMessage() }}</div> }
+@if (loading()) { <p class="loading-row" role="status"><span class="spinner"></span> Loading performance...</p> }
+@else if (detail(); as d) {
+  <header class="faculty-header">
+    <div class="faculty-profile">
+      <app-profile-avatar kind="instructors" [profileId]="d.instructorId" [name]="d.instructorName" size="large" [editable]="true" />
+      <div><span class="eyebrow">Faculty performance</span><h1>{{ d.instructorName }}</h1>
+        <div class="profile-meta"><span><app-icon name="building" size="sm" /> {{ d.departmentName }}</span><span class="employee-number">Employee no. {{ d.employeeNumber }}</span></div></div>
+    </div>
+    <div class="faculty-period"><span class="badge badge-muted"><app-icon name="calendar" size="sm" /> All evaluation periods</span>
+      @if (d.isFlagged) { <span class="badge badge-warning"><app-icon name="flag" size="sm" /> Requires attention</span> }
+    </div>
+  </header>
+  @if (d.isFlagged && d.flagReason) { <div class="banner-error">{{ d.flagReason }}</div> }
+  @if (!d.meetsAnonymityThreshold) {
+    <section class="score-status" aria-labelledby="score-status-title">
+      <span class="status-icon"><app-icon name="eye-off" size="lg" /></span>
+      <div class="status-copy"><h2 id="score-status-title">Scores protected</h2>
+        <p>At least 5 unique respondents are required to display scores.</p>
+        <span>{{ d.evaluationsSubmittedCount | number }} {{ d.evaluationsSubmittedCount === 1 ? 'evaluation' : 'evaluations' }} &middot; {{ d.respondentCount | number }} {{ d.respondentCount === 1 ? 'student' : 'students' }}</span>
+      </div>
+      <div class="respondent-progress"><div><span>Student respondents</span><strong>{{ d.respondentCount }} <small>/ 5</small></strong></div>
+        <progress [value]="d.respondentCount" max="5" aria-label="Student respondents required to display scores"></progress>
+      </div>
+    </section>
+  } @else {
+    <div class="performance-metrics">
+      <div><span class="metric-label"><app-icon name="star" /> Overall rating</span><strong>{{ d.overallAverageRating === null ? '--' : (d.overallAverageRating | number:'1.2-2') }} <small>/ 5</small></strong>
+        @if (periodDelta(); as delta) { <span class="metric-note" [class.positive]="delta.value > 0" [class.negative]="delta.value < 0">
+          <app-icon [name]="delta.value < 0 ? 'arrow-down' : 'arrow-up'" size="sm" /> {{ delta.value < 0 ? -delta.value : delta.value | number:'1.2-2' }} in latest period vs {{ delta.period }}
+        </span> } @else { <span class="metric-note">All-period weighted average</span> }
+      </div>
+      <div><span class="metric-label"><app-icon name="clipboard" /> Rapid appraisal</span><strong>{{ d.rapidAppraisalAverageRating === null ? '--' : (d.rapidAppraisalAverageRating | number:'1.2-2') }} <small>/ 10</small></strong><span class="metric-note">Separate 6-10 rating scale</span></div>
+      <div><span class="metric-label"><app-icon name="users" /> Student respondents</span><strong>{{ d.respondentCount | number }}</strong><span class="metric-note">{{ d.evaluationsSubmittedCount | number }} evaluations submitted</span></div>
+      <div><span class="metric-label"><app-icon name="check-circle" /> Favorable ratings</span><strong>{{ favorable() === null ? '--' : favorable() + '%' }}</strong><span class="metric-note">Answers rated 4 or 5 &middot; {{ ratingsTotal() | number }} total</span></div>
+    </div>
+
+    <div class="performance-charts">
+      <section class="detail-section"><div class="section-title"><h2>Category Performance</h2><span class="badge badge-muted">Out of 5</span></div>
+        @if (d.categoryRatings.length) { <app-analytics-chart [config]="categoryChart()" label="Average rating by teaching category, out of five" [style.height.px]="chartHeight()" />
+          <div class="category-legend">@for (category of d.categoryRatings; track category.categoryId) {
+            <div><span>{{ category.categoryName }}</span><strong>{{ category.averageRating | number:'1.2-2' }} <small>/ 5</small></strong><span class="muted">{{ category.ratingCount }} ratings</span></div>
+          }</div>
+        } @else { <p class="empty-state">No category ratings available.</p> }
+      </section>
+      <section class="detail-section"><div class="section-title"><h2>Rating Distribution</h2><span class="muted">{{ ratingsTotal() }} answers</span></div>
+        @if (ratingsTotal()) { <app-analytics-chart [config]="distributionChart()" label="Number of answers for each rating from one to five" />
+          <div class="distribution-values">@for (rating of d.ratingDistribution; track rating.rating) { <div><span>{{ rating.rating }} <app-icon name="star" size="sm" /></span><strong>{{ rating.count }}</strong></div> }</div>
+        } @else { <p class="empty-state">No numerical ratings available.</p> }
+      </section>
+    </div>
+    <section class="detail-section">
+      <div class="section-title"><h2>Performance Over Time</h2><span class="muted">By evaluation period</span></div>
+      <div class="period-layout">
+        @if (hasTrend()) { <app-analytics-chart [config]="trendChart()" label="Average Likert rating across evaluation periods; periods with fewer than five respondents are withheld" /> }
+        @else { <p class="empty-state">Period scores require 5 unique respondents.</p> }
+        <div class="table-wrap"><table class="data-table period-table"><thead><tr><th>Period</th><th>Evaluations</th><th>Rating / 5</th><th>Rapid / 10</th></tr></thead><tbody>
+          @for (period of d.periodPerformance; track period.periodId) {
+            <tr><td>{{ period.periodName }} @if (period.scoresProtected) { <span class="badge badge-muted">Protected</span> }</td>
+              <td>{{ period.submittedCount }}</td><td>{{ period.averageRating === null ? '--' : (period.averageRating | number:'1.2-2') }}</td><td>{{ period.rapidAppraisalAverageRating === null ? '--' : (period.rapidAppraisalAverageRating | number:'1.2-2') }}</td></tr>
+          } @empty { <tr><td colspan="4" class="empty-state">No period data available.</td></tr> }
+        </tbody></table></div>
+      </div>
+    </section>
+    <section class="detail-section">
+      <div class="section-title"><h2>Question-Level Performance</h2>
+        <div class="sort-field"><label for="question-sort">Sort by</label><select id="question-sort" [value]="questionSort()" (change)="questionSort.set($any($event.target).value)"><option value="original">Question order</option><option value="lowest">Lowest rating</option><option value="highest">Highest rating</option></select></div>
+      </div>
+      <div class="table-wrap"><table class="data-table question-table"><thead><tr><th>Question</th><th>Average rating</th><th>Answers</th></tr></thead><tbody>
+        @for (question of sortedQuestions(); track question.questionId) { <tr><td>{{ question.questionText }}</td>
+          <td><div class="question-score"><progress [value]="question.averageRating" max="5" [attr.aria-label]="question.questionText + ' average rating'"></progress><strong>{{ question.averageRating | number:'1.2-2' }} <small>/ 5</small></strong></div></td>
+          <td>{{ question.ratingCount }}</td></tr>
+        } @empty { <tr><td colspan="3" class="empty-state">No question ratings available.</td></tr> }
+      </tbody></table></div>
+    </section>
+
+  }
+  <section class="feedback-workspace" aria-labelledby="feedback-title">
+    <div class="section-title feedback-heading"><h2 id="feedback-title"><app-icon name="message" size="lg" /> Student feedback <span class="badge badge-muted">{{ feedbackCount() }}</span></h2>
+      <span class="anonymous-label"><app-icon name="eye-off" size="sm" /> Anonymous</span>
+    </div>
+    <div class="feedback-filters" role="group" aria-label="Feedback type">
+      @for (filter of feedbackFilters(); track filter.key) {
+        <button type="button" [class.active]="feedbackType() === filter.key" [attr.aria-pressed]="feedbackType() === filter.key" (click)="selectFeedbackType(filter.key)">{{ filter.label }} <span>{{ filter.count }}</span></button>
+      }
+    </div>
+    @for (group of [{ title: 'Written Feedback', key: 'comments', rows: d.comments }, { title: 'Rapid Appraisal Feedback', key: 'rapid', rows: d.rapidAppraisalComments }]; track group.key) {
+      @if (feedbackType() === group.key || (feedbackType() === 'all' && group.rows.length)) {
+        <section class="feedback-group" [attr.aria-label]="group.title">
+          <h3>{{ group.title }} <span>{{ group.rows.length }} {{ group.rows.length === 1 ? 'comment' : 'comments' }}</span></h3>
+          <ul class="feedback-list">
+            @for (comment of group.rows; track $index) {
+              <li class="feedback-item" [class.flagged]="comment.isFlaggedNegative">
+                <p>{{ comment.commentText }}</p>
+                @if (comment.isFlaggedNegative || comment.originalCommentText) {
+                  <div class="feedback-actions">
+                    @if (comment.isFlaggedNegative) { <span class="badge badge-warning"><app-icon name="flag" size="sm" /> Flagged negative</span> }
+                    @if (comment.originalCommentText) {
+                      <button class="btn btn-sm original-toggle" type="button" [attr.aria-expanded]="isOriginalExpanded(group.key + '-' + $index)" [attr.aria-controls]="'original-' + group.key + '-' + $index" (click)="toggleOriginal(group.key + '-' + $index)"><app-icon [name]="isOriginalExpanded(group.key + '-' + $index) ? 'eye-off' : 'eye'" size="sm" /> {{ isOriginalExpanded(group.key + '-' + $index) ? 'Hide original' : 'Show original' }}</button>
+                    }
+                  </div>
+                }
+                @if (comment.originalCommentText && isOriginalExpanded(group.key + '-' + $index)) {
+                  <div class="original-feedback" [id]="'original-' + group.key + '-' + $index"><span>Original comment</span><blockquote>{{ comment.originalCommentText }}</blockquote></div>
+                }
+              </li>
+            } @empty { <li class="empty-feedback"><app-icon name="inbox" size="lg" /><p>No {{ group.key === 'comments' ? 'written' : 'rapid appraisal' }} comments submitted.</p></li> }
+          </ul>
+        </section>
+      }
+    }
+    @if (feedbackType() === 'all' && !feedbackCount()) { <div class="empty-feedback"><app-icon name="inbox" size="lg" /><p>No feedback submitted.</p></div> }
+  </section>
+  @if (d.meetsAnonymityThreshold) {
+    <section class="detail-section summary-section" aria-labelledby="summary-title" [attr.aria-busy]="summaryLoading()"><div class="section-title"><h2 id="summary-title"><app-icon name="sparkles" /> AI Performance Summary</h2><button class="btn" type="button" [disabled]="summaryLoading()" (click)="generateSummary()"><app-icon [name]="summary() ? 'refresh' : 'sparkles'" /> {{ summaryLoading() ? 'Generating...' : summary() ? 'Regenerate summary' : 'Generate summary' }}</button></div>
+      @if (summaryError()) { <div class="banner-error" role="alert">{{ summaryError() }}</div> }
+      @if (summaryLoading()) { <p class="summary-loading" role="status"><span class="spinner"></span> {{ summary() ? 'Updating performance analysis...' : 'Analyzing student evaluations...' }}</p> }
+      @if (summary(); as saved) {
+        <div class="summary-meta"><span><app-icon name="clock" size="sm" /> {{ saved.generatedAtUtc | date:'medium' }}</span><span>{{ saved.evaluationCount | number }} evaluations &middot; {{ saved.respondentCount | number }} respondents</span>
+          @if (summaryHasNewData()) { <span class="badge badge-warning">Evaluation data has changed</span> }
+        </div>
+        <p class="summary-text">{{ saved.summary }}</p>
+      } @else if (!summaryLoading()) { <p class="muted">No performance summary saved.</p> }
+    </section>
+  }
+}
