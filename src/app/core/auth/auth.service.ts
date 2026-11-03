@@ -10,6 +10,7 @@ import {
   RegisterStudentResponse,
 } from '../models/auth.models';
 import { TokenStorageService } from './token-storage.service';
+import { ApiCache } from '../interceptors/cache.interceptor';
 
 /**
  * Single source of truth for "who is logged in" on the client. The access
@@ -21,6 +22,7 @@ import { TokenStorageService } from './token-storage.service';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly tokenStorage = inject(TokenStorageService);
+  private readonly cache = inject(ApiCache);
 
   private accessToken = signal<string | null>(null);
   private accessTokenExpiresAtUtc = signal<Date | null>(null);
@@ -113,6 +115,7 @@ export class AuthService {
   }
 
   private clearSession(): void {
+    this.cache.clear();
     this.accessToken.set(null);
     this.accessTokenExpiresAtUtc.set(null);
     this.user.set(null);

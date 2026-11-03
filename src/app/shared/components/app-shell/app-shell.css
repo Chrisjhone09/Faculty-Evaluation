@@ -35,10 +35,12 @@
 }
 
 .brand-mark {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-sm);
-  background: var(--color-primary);
+  background: var(--color-surface);
+  object-fit: contain;
+  padding: 2px;
   color: var(--color-primary-contrast);
   display: flex;
   align-items: center;

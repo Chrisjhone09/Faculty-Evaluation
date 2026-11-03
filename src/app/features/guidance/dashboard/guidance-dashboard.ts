@@ -1,4 +1,5 @@
 import { DecimalPipe } from '@angular/common';
+import { ApiCache } from '../../../core/interceptors/cache.interceptor';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,7 +12,7 @@ import { Icon } from '../../../shared/components/icon/icon';
 import { GuidanceReportingService } from '../services/guidance-reporting.service';
 import { AdminDepartmentsService } from '../../admin/services/admin-departments.service';
 
-const COLORS = ['#0f766e', '#3b82f6', '#f59e0b', '#e06479', '#64748b', '#8b5cf6'];
+const COLORS = ['#7e22ce', '#3b82f6', '#f59e0b', '#e06479', '#64748b', '#8b5cf6'];
 const AXES = {
   x: { grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 0, maxTicksLimit: 8 } },
   y: { beginAtZero: true, grid: { color: '#eef0f2' }, border: { display: false }, ticks: { color: '#6b7280', precision: 0 } },
@@ -24,6 +25,7 @@ const AXES = {
   styleUrls: ['./dashboard-charts.css', './guidance-dashboard.css'],
 })
 export class GuidanceDashboard implements OnInit {
+  private readonly cache = inject(ApiCache);
   private readonly reporting = inject(GuidanceReportingService);
   private readonly departmentService = inject(AdminDepartmentsService);
   private readonly route = inject(ActivatedRoute);
@@ -50,7 +52,7 @@ export class GuidanceDashboard implements OnInit {
     type: 'line',
     data: { labels: this.analytics()?.trend.map(p => new Date(p.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })) ?? [],
       datasets: [{ label: 'Submissions', data: this.analytics()?.trend.map(p => p.count) ?? [],
-        borderColor: COLORS[0], backgroundColor: '#0f766e14', fill: true, tension: 0.25,
+        borderColor: COLORS[0], backgroundColor: '#7e22ce14', fill: true, tension: 0.25,
         pointRadius: 3, pointHoverRadius: 6, borderWidth: 2 }] },
     options: { plugins: { legend: { display: false } }, scales: AXES },
   }));
@@ -105,7 +107,7 @@ export class GuidanceDashboard implements OnInit {
   protected filter(key: 'department' | 'period', value: string): void {
     this.router.navigate([], { relativeTo: this.route, queryParams: { [key]: value || null }, queryParamsHandling: 'merge' });
   }
-  protected refresh(): void { this.refreshTrigger.next(); }
+  protected refresh(): void { this.cache.clear(); this.refreshTrigger.next(); }
   protected exportCsv(): void {
     const a = this.analytics();
     if (!a) return;

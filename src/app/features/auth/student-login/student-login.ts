@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/auth/auth.service';
   selector: 'app-student-login', imports: [ReactiveFormsModule, RouterLink],
   template: `<div class="login-page">
     <form class="login-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <img class="school-logo" src="/school-logo.png" alt="Colegio de Kidapawan, Inc. logo" width="88" height="88" />
       <h1>Faculty Evaluation</h1><p class="subtitle">Student Login</p>
       <label for="studentNumber">Student ID</label>
       <input id="studentNumber" type="text" formControlName="studentNumber" autocomplete="username" maxlength="30" />

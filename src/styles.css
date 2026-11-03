@@ -4,7 +4,7 @@
    One stylesheet defines the whole product's visual language: tokens first,
    then primitives built only from those tokens.
 
-   Teal marks primary actions. Neutral chrome and distinct data colours
+   Purple marks primary actions. Neutral chrome and distinct data colours
    keep operational screens easy to scan.
 
    RULES
@@ -56,28 +56,28 @@
      ====================================================================== */
 
   /* ---- Brand ------------------------------------------------------------ */
-  --color-primary: #0f766e;
-  --color-primary-hover: #115e59;
-  --color-primary-active: #134e4a;
+  --color-primary: #7e22ce;
+  --color-primary-hover: #6b21a8;
+  --color-primary-active: #581c87;
   --color-primary-contrast: var(--neutral-0);
 
-  --color-primary-subtle: #f0fdfa;
-  --color-primary-subtle-hover: #ccfbf1;
-  --color-primary-subtle-strong: #ccfbf1;
+  --color-primary-subtle: #faf5ff;
+  --color-primary-subtle-hover: #f3e8ff;
+  --color-primary-subtle-strong: #f3e8ff;
 
-  --color-primary-border: #99f6e4;
-  --color-primary-border-strong: #5eead4;
+  --color-primary-border: #e9d5ff;
+  --color-primary-border-strong: #c084fc;
 
-  --color-primary-text: #0f766e;
-  --color-primary-text-strong: #115e59;
+  --color-primary-text: #7e22ce;
+  --color-primary-text-strong: #6b21a8;
 
   /* ---- Focus ------------------------------------------------------------ */
-  --color-focus-ring: rgba(15, 118, 110, 0.22);
-  --color-focus-border: #0f766e;
+  --color-focus-ring: rgba(126, 34, 206, 0.22);
+  --color-focus-border: #7e22ce;
   --focus-ring: 0 0 0 3px var(--color-focus-ring);
 
   /* ---- Surfaces --------------------------------------------------------- */
-  --color-bg: #fafbfc;
+  --color-bg: #fcfaff;
   --color-surface: var(--neutral-0);
   --color-surface-subtle: var(--neutral-25);
   --color-surface-muted: var(--neutral-100);
@@ -127,19 +127,19 @@
   --color-success-text-soft: var(--color-success-text);
 
   /* ---- App chrome ------------------------------------------------------- */
-  --color-sidebar-bg: #202629;
-  --color-sidebar-raised: #30383c;
+  --color-sidebar-bg: #271337;
+  --color-sidebar-raised: #3b2050;
   --color-sidebar-hover: rgba(255, 255, 255, 0.07);
   --color-sidebar-border: rgba(255, 255, 255, 0.09);
-  --color-sidebar-text: #f0f4f4;
-  --color-sidebar-text-muted: #aebcbe;
-  --color-sidebar-text-disabled: #89969b;
-  --color-sidebar-section: #89969b;
+  --color-sidebar-text: #faf5ff;
+  --color-sidebar-text-muted: #d1bfdc;
+  --color-sidebar-text-disabled: #b19ac1;
+  --color-sidebar-section: #bda6ce;
   --color-sidebar-active-bg: var(--color-primary);
   --color-sidebar-active-text: var(--neutral-0);
 
   /* ---- Data visualisation ----------------------------------------------- */
-  --color-chart-1: #0f766e;
+  --color-chart-1: #7e22ce;
   --color-chart-2: #3b82f6;
   --color-chart-3: #f59e0b;
   --color-chart-4: #e06479;
@@ -149,7 +149,7 @@
   --color-chart-grid: var(--neutral-150);
   /* Non-brand series, for the rare chart that contrasts two meanings
      (healthy vs flagged). Use sparingly. */
-  --color-chart-contrast: #0d9488;
+  --color-chart-contrast: #a855f7;
   --color-chart-alert: var(--color-warning-solid);
 
   /* ======================================================================

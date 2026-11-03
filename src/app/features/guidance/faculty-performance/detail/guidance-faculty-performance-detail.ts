@@ -74,7 +74,7 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
   protected readonly categoryChart = computed<ChartConfiguration>(() => {
     const rows = this.detail()?.categoryRatings ?? [];
     return { type: 'bar', data: { labels: rows.map(c => c.categoryName.match(/.{1,24}(?:\\s|$)|.{1,24}/g) ?? [c.categoryName]),
-      datasets: [{ label: 'Average / 5', data: rows.map(c => c.averageRating), backgroundColor: '#0f766e', borderRadius: 4, maxBarThickness: 28 }] },
+      datasets: [{ label: 'Average / 5', data: rows.map(c => c.averageRating), backgroundColor: '#7e22ce', borderRadius: 4, maxBarThickness: 28 }] },
       options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: {
         x: { min: 0, max: 5, grid: { color: '#eef0f2' }, ticks: { stepSize: 1 } },
         y: { grid: { display: false } } } } };
@@ -82,7 +82,7 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
   protected readonly distributionChart = computed<ChartConfiguration>(() => ({
     type: 'bar', data: { labels: (this.detail()?.ratingDistribution ?? []).map(r => String(r.rating)),
       datasets: [{ label: 'Answers', data: (this.detail()?.ratingDistribution ?? []).map(r => r.count),
-        backgroundColor: ['#e06479', '#f0ab62', '#d8bd45', '#4e9db6', '#0f766e'], borderRadius: 4, maxBarThickness: 42 }] },
+        backgroundColor: ['#e06479', '#f0ab62', '#d8bd45', '#4e9db6', '#7e22ce'], borderRadius: 4, maxBarThickness: 42 }] },
     options: { plugins: { legend: { display: false } }, scales: {
       x: { title: { display: true, text: 'Rating / 5' }, grid: { display: false } },
       y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef0f2' } } } },
@@ -104,7 +104,7 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
     const a = this.detail()?.analytics;
     return { type: 'doughnut', data: { labels: ['Positive', 'Neutral', 'Negative'],
       datasets: [{ data: [a?.positive ?? 0, a?.neutral ?? 0, a?.negative ?? 0],
-        backgroundColor: ['#0f766e', '#64748b', '#d14760'], borderWidth: 0 }] },
+        backgroundColor: ['#7e22ce', '#64748b', '#d14760'], borderWidth: 0 }] },
       options: { plugins: { legend: { position: 'bottom' } } } };
   });
   ngOnInit(): void {}

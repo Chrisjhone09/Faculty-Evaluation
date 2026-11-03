@@ -34,8 +34,8 @@ import { Icon } from '../icon/icon';
     .photo-action { position: absolute; right: -4px; bottom: -3px; width: 24px; height: 24px;
       display: grid; place-items: center; border-radius: 50%; border: 1px solid #d6dfdd;
       color: #475653; background: white; cursor: pointer; }
-    .photo-action:hover { background: #eff8f6; color: #0f766e; }
-    .photo-action:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }
+    .photo-action:hover { background: #faf5ff; color: #7e22ce; }
+    .photo-action:focus-visible { outline: 2px solid #7e22ce; outline-offset: 2px; }
     .photo-error { color: #b42318; font-size: 12px; max-width: 140px; overflow-wrap: anywhere; }
   `],
 })

@@ -1,13 +1,13 @@
 .performance-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; padding: 24px 0; border-top: 1px solid var(--color-border); }
 .performance-metrics > div { min-width: 0; padding-left: 16px; border-left: 2px solid #dce2e5; }
-.performance-metrics > div:first-child { border-left-color: #0f766e; }
+.performance-metrics > div:first-child { border-left-color: #7e22ce; }
 .performance-metrics > div:nth-child(2) { border-left-color: #4e9db6; }
 .performance-metrics > div:nth-child(4) { border-left-color: #d99522; }
 .metric-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted); }
 .performance-metrics strong { display: block; font-size: 30px; margin: 10px 0 8px; font-variant-numeric: tabular-nums; }
 .performance-metrics small { font-size: 14px; font-weight: 400; color: var(--color-text-muted); }
 .metric-note { display: block; font-size: 12px; color: var(--color-text-muted); line-height: 1.6; }
-.metric-note.positive { color: #0f766e; }
+.metric-note.positive { color: #7e22ce; }
 .metric-note.negative { color: #b42318; }
 .performance-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
 .category-legend { margin-top: 12px; }

@@ -75,3 +75,115 @@ chunk-3OAW3IRJ.js   | login                               |  14.02 kB |
 Application bundle generation complete. [0.394 seconds] - 2026-11-03T04:37:37.647Z
 
 Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names              | Raw size
+main.js             | main               |  6.48 kB | 
+
+Lazy chunk files    | Names              | Raw size
+chunk-SURWF3AM.js   | guidance-dashboard | 65.70 kB | 
+chunk-Q4OCFRJQ.js   | guidance-routes    |  6.15 kB | 
+
+Application bundle generation complete. [0.836 seconds] - 2026-11-03T05:54:58.292Z
+
+Component update sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Application bundle generation failed. [0.355 seconds] - 2026-11-03T06:02:52.906Z
+
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names                               |  Raw size
+styles.css          | styles                              |  41.78 kB | 
+main.js             | main                                |   6.48 kB | 
+chunk-U7LMNX76.js   | -                                   |   5.72 kB | 
+chunk-VUJOFXKG.js   | -                                   | 938 bytes | 
+chunk-MYVHLTRL.js   | -                                   | 487 bytes | 
+chunk-LZJ4YOOK.js   | -                                   | 157 bytes | 
+
+                    | Initial total                       |  55.56 kB
+
+Lazy chunk files    | Names                               |  Raw size
+chunk-X5FD77D3.js   | admin-academics                     | 105.06 kB | 
+chunk-F5UXVXP4.js   | guidance-faculty-performance-detail |  90.57 kB | 
+chunk-VXNG4FH6.js   | dean-class-detail                   |  76.10 kB | 
+chunk-SURWF3AM.js   | guidance-dashboard                  |  65.70 kB | 
+chunk-P7ZXACMP.js   | admin-evaluations                   |  62.66 kB | 
+chunk-75T7WCKI.js   | sentiment-validation                |  58.99 kB | 
+chunk-RG3D25KM.js   | admin-evaluation-form-detail        |  57.08 kB | 
+chunk-K7VGQEK3.js   | guidance-rosters                    |  54.86 kB | 
+chunk-6TF4F4XM.js   | guidance-faculty-performance        |  54.32 kB | 
+chunk-6CN2MJNW.js   | student-masterlist                  |  50.01 kB | 
+chunk-O2R5BWQS.js   | -                                   |  47.38 kB | 
+chunk-6MASEJ2G.js   | guidance-comments                   |  24.52 kB | 
+chunk-LC53AMPC.js   | student-evaluate                    |  23.35 kB | 
+chunk-ZJH2CP6C.js   | admin-users                         |  15.41 kB | 
+chunk-3OAW3IRJ.js   | login                               |  14.02 kB | 
+...and 21 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.563 seconds] - 2026-11-03T06:03:04.473Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names                        |  Raw size
+styles.css          | styles                       |  41.99 kB | 
+main.js             | main                         |   6.48 kB | 
+
+Lazy chunk files    | Names                        |  Raw size
+chunk-FONYLRWK.js   | admin-academics              | 105.06 kB | 
+chunk-VGTUNVCW.js   | dean-class-detail            |  76.10 kB | 
+chunk-GMKLX5JA.js   | guidance-dashboard           |  65.68 kB | 
+chunk-ADI2DOLJ.js   | admin-evaluations            |  62.66 kB | 
+chunk-DUU7QRGK.js   | admin-evaluation-form-detail |  57.08 kB | 
+chunk-LAYNEXAJ.js   | guidance-rosters             |  54.86 kB | 
+chunk-QFTPHE3B.js   | student-masterlist           |  50.01 kB | 
+chunk-WM5MLEJE.js   | -                            |  47.03 kB | 
+chunk-R3E3WCDM.js   | admin-users                  |  15.41 kB | 
+chunk-ZSIZ4B3V.js   | -                            |   6.98 kB | 
+chunk-CCLOZG2C.js   | guidance-routes              |   6.15 kB | 
+chunk-QZLTOWYE.js   | student-routes               |   2.93 kB | 
+
+Application bundle generation complete. [1.277 seconds] - 2026-11-03T06:05:53.703Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names                        | Raw size
+main.js             | main                         |  6.48 kB | 
+
+Lazy chunk files    | Names                        | Raw size
+chunk-ADOHL7HL.js   | admin-evaluation-form-detail | 57.08 kB | 
+chunk-PA2NFDNV.js   | guidance-routes              |  6.15 kB | 
+
+Application bundle generation complete. [0.499 seconds] - 2026-11-03T06:06:56.918Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names                               |  Raw size
+main.js             | main                                |   6.48 kB | 
+chunk-X7264SVD.js   | -                                   |   5.72 kB | 
+chunk-J6XZGEKD.js   | -                                   | 170 bytes | 
+
+Lazy chunk files    | Names                               |  Raw size
+chunk-EGMDKJRJ.js   | admin-academics                     | 105.06 kB | 
+chunk-WA7LBPPI.js   | guidance-faculty-performance-detail |  90.57 kB | 
+chunk-M5QT65FP.js   | dean-class-detail                   |  76.10 kB | 
+chunk-WDRL2PWG.js   | guidance-dashboard                  |  65.68 kB | 
+chunk-EP6XO62R.js   | admin-evaluations                   |  62.66 kB | 
+chunk-KIXRSXOF.js   | sentiment-validation                |  58.99 kB | 
+chunk-O2XZCNKA.js   | admin-evaluation-form-detail        |  57.08 kB | 
+chunk-3BQIGPDK.js   | guidance-rosters                    |  54.86 kB | 
+chunk-GG2E6TXI.js   | guidance-faculty-performance        |  54.32 kB | 
+chunk-2VKVQQJM.js   | student-masterlist                  |  50.01 kB | 
+chunk-2KEIVPX2.js   | -                                   |  47.03 kB | 
+chunk-NTM4D6BB.js   | guidance-comments                   |  24.52 kB | 
+chunk-D53J4WTE.js   | student-evaluate                    |  23.35 kB | 
+chunk-NAEWWQE5.js   | admin-users                         |  15.41 kB | 
+chunk-SYX7GDDI.js   | login                               |  14.02 kB | 
+...and 15 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.647 seconds] - 2026-11-03T06:20:23.328Z
+
+Page reload sent to client(s).
