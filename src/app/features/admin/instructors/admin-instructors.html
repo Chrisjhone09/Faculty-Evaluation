@@ -42,6 +42,7 @@
             </td>
             <td style="text-align: right;">
               <button type="button" class="btn btn-sm" (click)="openEditModal(instructor)">Edit</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="openDelete(instructor)">Delete</button>
             </td>
           </tr>
         }
@@ -49,6 +50,18 @@
     </table>
   </div>
 }
+
+<app-modal [open]="deleting() !== null" title="Delete instructor" (closed)="closeDelete()">
+  @if (deleting(); as item) {
+    <p>Delete <strong>{{ item.firstName }} {{ item.lastName }}</strong>? This permanently removes the instructor.</p>
+    <p class="hint">Linked records must be removed first. To preserve history, use Edit to mark the record inactive.</p>
+    @if (deleteError()) { <div class="banner-error" role="alert">{{ deleteError() }}</div> }
+    <div class="form-actions">
+      <button type="button" class="btn" [disabled]="deleteSubmitting()" (click)="closeDelete()">Cancel</button>
+      <button type="button" class="btn btn-danger" [disabled]="deleteSubmitting()" (click)="confirmDelete()">{{ deleteSubmitting() ? 'Deleting…' : 'Delete instructor' }}</button>
+    </div>
+  }
+</app-modal>
 
 <app-modal [open]="showCreateModal()" title="New instructor" (closed)="showCreateModal.set(false)">
   <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>

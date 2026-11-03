@@ -9,6 +9,10 @@ export class AdminInstructorsService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${API_BASE_URL}/instructors`;
 
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
   list(): Observable<InstructorDto[]> {
     return this.http.get<InstructorDto[]>(this.baseUrl);
   }

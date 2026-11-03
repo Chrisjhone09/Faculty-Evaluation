@@ -187,3 +187,63 @@ chunk-SYX7GDDI.js   | login                               |  14.02 kB |
 Application bundle generation complete. [0.647 seconds] - 2026-11-03T06:20:23.328Z
 
 Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names           | Raw size
+styles.css          | styles          | 41.99 kB | 
+main.js             | main            |  6.48 kB | 
+
+Lazy chunk files    | Names           | Raw size
+chunk-QFZ6RIPM.js   | -               | 47.21 kB | 
+chunk-CUUKWPZ4.js   | login           | 14.56 kB | 
+chunk-GWJEGYTE.js   | student-login   | 13.67 kB | 
+chunk-EX556YCE.js   | guidance-routes |  6.15 kB | 
+chunk-LBBHMSEL.js   | student-routes  |  2.93 kB | 
+
+Application bundle generation complete. [0.594 seconds] - 2026-11-03T06:33:25.408Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names                               | Raw size
+main.js             | main                                |  6.48 kB | 
+
+Lazy chunk files    | Names                               | Raw size
+chunk-DAFKCA52.js   | guidance-faculty-performance-detail | 90.57 kB | 
+chunk-H4IBQGGN.js   | dean-class-detail                   | 76.10 kB | 
+chunk-UZ3WAGLJ.js   | guidance-dashboard                  | 65.68 kB | 
+chunk-RCRFLSNJ.js   | -                                   | 11.82 kB | 
+chunk-M6HHJZ7K.js   | guidance-routes                     |  6.15 kB | 
+
+Application bundle generation complete. [1.219 seconds] - 2026-11-03T06:33:27.286Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+
+No output file changes.
+
+Application bundle generation complete. [0.005 seconds] - 2026-11-03T06:33:44.076Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names                        | Raw size
+main.js             | main                         |  6.55 kB | 
+chunk-4T2VGOGY.js   | -                            |  5.82 kB | 
+chunk-YLTOYRK4.js   | -                            |  2.61 kB | 
+
+Lazy chunk files    | Names                        | Raw size
+chunk-GLPCFTOV.js   | dean-class-detail            | 76.13 kB | 
+chunk-N7ZVV6QM.js   | guidance-dashboard           | 65.78 kB | 
+chunk-N7LOE62P.js   | admin-evaluations            | 62.69 kB | 
+chunk-ZOBUKS5Z.js   | admin-evaluation-form-detail | 57.11 kB | 
+chunk-RK72JNTU.js   | -                            | 47.21 kB | 
+chunk-FRZRLD3S.js   | login                        | 14.59 kB | 
+chunk-7VE3WFKH.js   | student-login                | 13.70 kB | 
+chunk-6NIXN6UT.js   | guidance-routes              |  6.18 kB | 
+chunk-7ZZQGGXF.js   | student-routes               |  2.96 kB | 
+
+Application bundle generation complete. [1.049 seconds] - 2026-11-03T06:35:13.723Z
+
+Page reload sent to client(s).

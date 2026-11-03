@@ -316,6 +316,36 @@ test('overview charts render with weighted scores and selected period links', as
   await page.screenshot({ path: `test-results/weighted-overview-${info.project.name}.png`, fullPage: true });
 });
 
+for (const [tab, kind, id] of [
+  ['departments', 'department', 'd1'], ['subjects', 'subject', 'subject1'],
+  ['sections', 'section', 'sec1'], ['instructors', 'instructor', 'i1'],
+]) {
+  test(`Academic Structure deletes ${kind} and explains linked-record conflicts`, async ({ page }) => {
+    await setup(page);
+    let blocked = true;
+    let deletes = 0;
+    await page.route(`**/api/${tab}/${id}`, async route => {
+      if (route.request().method() !== 'DELETE') return route.fallback();
+      deletes++;
+      if (blocked) return route.fulfill({ status: 409, json: { detail: 'This record is linked to classes. Mark it inactive through Edit.' } });
+      return route.fulfill({ status: 204 });
+    });
+    await page.goto(`/guidance/academics?tab=${tab}`);
+    const row = page.locator('tbody tr').first();
+    await row.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    expect(deletes).toBe(0);
+    await row.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('button', { name: `Delete ${kind}`, exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('linked to classes');
+    await expect(row).toBeVisible();
+    blocked = false;
+    await page.getByRole('button', { name: `Delete ${kind}`, exact: true }).click();
+    await expect(page.locator('tbody tr')).toHaveCount(0);
+    expect(deletes).toBe(2);
+  });
+}
+
 test('Guidance accounts do not offer retired roles or student passwords', async ({ page }) => {
   await setup(page); await page.goto('/guidance/users');
   await page.getByRole('button', { name: 'Add Guidance account', exact: true }).click();

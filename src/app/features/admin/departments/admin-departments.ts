@@ -21,6 +21,36 @@ export class AdminDepartments implements OnInit {
   protected readonly users = signal<UserDto[]>([]);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly deleting = signal<DepartmentDto | null>(null);
+  protected readonly deleteSubmitting = signal(false);
+  protected readonly deleteError = signal<string | null>(null);
+
+  protected openDelete(item: DepartmentDto): void {
+    this.deleting.set(item);
+    this.deleteError.set(null);
+  }
+
+  protected closeDelete(): void {
+    if (!this.deleteSubmitting()) this.deleting.set(null);
+  }
+
+  protected confirmDelete(): void {
+    const item = this.deleting();
+    if (!item || this.deleteSubmitting()) return;
+    this.deleteSubmitting.set(true);
+    this.deleteError.set(null);
+    this.departmentsService.delete(item.id).subscribe({
+      next: () => {
+        this.departments.update(items => items.filter(value => value.id !== item.id));
+        this.deleteSubmitting.set(false);
+        this.deleting.set(null);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.deleteSubmitting.set(false);
+        this.deleteError.set(error.error?.detail ?? 'Could not delete this department. Please try again.');
+      },
+    });
+  }
 
   protected readonly showCreateModal = signal(false);
   protected readonly createSubmitting = signal(false);

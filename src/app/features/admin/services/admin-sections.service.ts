@@ -9,6 +9,10 @@ export class AdminSectionsService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${API_BASE_URL}/sections`;
 
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
   list(): Observable<SectionDto[]> {
     return this.http.get<SectionDto[]>(this.baseUrl);
   }

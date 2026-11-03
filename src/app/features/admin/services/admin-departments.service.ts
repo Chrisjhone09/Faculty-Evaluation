@@ -14,6 +14,10 @@ export class AdminDepartmentsService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${API_BASE_URL}/departments`;
 
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
   list(): Observable<DepartmentDto[]> {
     return this.http.get<DepartmentDto[]>(this.baseUrl);
   }
