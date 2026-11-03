@@ -34,3 +34,59 @@ Watch mode enabled. Watching for file changes...
 NOTE: Raw file sizes do not reflect development server per-request transformations.
   ➜  Local:   http://127.0.0.1:4200/
   ➜  press h + enter to show help
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names                               |  Raw size
+main.js             | main                                |   6.64 kB | 
+chunk-BA2UIDYL.js   | -                                   |   5.55 kB | 
+chunk-KN7V2XMS.js   | -                                   | 169 bytes | 
+
+Lazy chunk files    | Names                               |  Raw size
+chunk-X2YTLSOT.js   | admin-academics                     | 115.59 kB | 
+chunk-JAFNXOFD.js   | guidance-faculty-performance-detail |  93.45 kB | 
+chunk-ZIBEB3NX.js   | dean-class-detail                   |  75.98 kB | 
+chunk-PINJNMD4.js   | dean-classes-workspace              |  69.34 kB | 
+chunk-VTPVTHG3.js   | admin-evaluations                   |  64.08 kB | 
+chunk-RC6MV3RH.js   | guidance-dashboard                  |  64.05 kB | 
+chunk-EI7VCT5U.js   | admin-users                         |  56.94 kB | 
+chunk-NXYKZYSI.js   | guidance-rosters                    |  54.86 kB | 
+chunk-N3HFHWSM.js   | dean-dashboard                      |  51.82 kB | 
+chunk-YNU3FA5A.js   | instructor-classes-workspace        |  51.44 kB | 
+chunk-EHXWYMQF.js   | -                                   |  47.33 kB | 
+chunk-C64BOIRG.js   | admin-evaluation-form-detail        |  42.37 kB | 
+chunk-5HMVXLVY.js   | guidance-faculty-performance        |  37.45 kB | 
+chunk-TEZOJHV6.js   | student-masterlist                  |  32.70 kB | 
+chunk-CDAQL5DV.js   | instructor-class-detail             |  28.23 kB | 
+...and 23 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [2.364 seconds] - 2026-10-09T01:21:41.467Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names                               |  Raw size
+main.js             | main                                |   6.64 kB | 
+chunk-SPDA554N.js   | -                                   |   5.55 kB | 
+chunk-3ZAVDLM5.js   | -                                   | 170 bytes | 
+
+Lazy chunk files    | Names                               |  Raw size
+chunk-FL3KMSEJ.js   | admin-academics                     | 115.59 kB | 
+chunk-CNF4BKPT.js   | guidance-faculty-performance-detail |  93.45 kB | 
+chunk-FUEMIOVJ.js   | dean-class-detail                   |  75.98 kB | 
+chunk-4RGUMLUI.js   | dean-classes-workspace              |  69.34 kB | 
+chunk-4DB7NJM2.js   | admin-evaluations                   |  64.08 kB | 
+chunk-YWO367UA.js   | guidance-dashboard                  |  64.05 kB | 
+chunk-5G5USROQ.js   | admin-users                         |  56.94 kB | 
+chunk-3KQBQF3V.js   | guidance-rosters                    |  54.86 kB | 
+chunk-EGRH7FU5.js   | dean-dashboard                      |  51.82 kB | 
+chunk-JDMOEGNA.js   | instructor-classes-workspace        |  51.44 kB | 
+chunk-5O55ITFF.js   | -                                   |  47.33 kB | 
+chunk-KGDWN7EQ.js   | admin-evaluation-form-detail        |  42.37 kB | 
+chunk-IRGXHAYH.js   | guidance-faculty-performance        |  37.45 kB | 
+chunk-QWFOULLN.js   | student-masterlist                  |  32.70 kB | 
+chunk-EWLHR4P3.js   | instructor-class-detail             |  28.23 kB | 
+...and 23 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.747 seconds] - 2026-10-09T01:21:43.678Z
+
+Page reload sent to client(s).

@@ -1,3 +1,4 @@
+import { ReportPeriod } from '../shared/report-period';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
@@ -13,7 +14,7 @@ import { GuidanceReportingService } from '../services/guidance-reporting.service
  */
 @Component({
   selector: 'app-guidance-comments',
-  imports: [Icon, PageHeader],
+  imports: [Icon, PageHeader, ReportPeriod],
   templateUrl: './guidance-comments.html',
   styleUrl: './guidance-comments.css',
 })
@@ -51,13 +52,13 @@ export class GuidanceComments implements OnInit {
       .sort((a, b) => a.name.localeCompare(b.name)),
   );
 
-  ngOnInit(): void {
-    this.refresh();
-  }
+  protected readonly periodId = signal<string | undefined>(undefined);
+  ngOnInit(): void {}
+  protected loadPeriod(id: string | undefined): void { this.periodId.set(id); this.refresh(); }
 
   protected refresh(): void {
     this.filtersError.set(null);
-    this.reportingService.getFacultyPerformance().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.reportingService.getFacultyPerformance(this.periodId()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (rows) => this.facultyRows.set(rows),
       error: () => this.filtersError.set('Could not load comment filters.'),
     });
@@ -99,7 +100,7 @@ export class GuidanceComments implements OnInit {
     this.expandedOriginals.set(new Set());
     this.comments.set([]);
 
-    this.commentsRequest = this.reportingService.getComments(this.selectedDepartmentId() || null, this.selectedInstructorId() || null)
+    this.commentsRequest = this.reportingService.getComments(this.selectedDepartmentId() || null, this.selectedInstructorId() || null, this.periodId())
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (result) => {
         this.comments.set(result.comments);

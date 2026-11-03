@@ -22,12 +22,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         error.status === 401 &&
         req.url.startsWith(API_BASE_URL) &&
         !req.url.includes('/auth/login') &&
+        !req.url.includes('/auth/student-login') &&
         !req.url.includes('/auth/refresh')
       ) {
         return authService.refresh().pipe(
           switchMap((response) => {
             if (!response) {
-              router.navigate(['/login']);
+              router.navigate([router.url.startsWith('/guidance') ? '/guidance/login' : '/student/login']);
               return throwError(() => error);
             }
 

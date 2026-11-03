@@ -42,7 +42,7 @@ export class Login {
         this.isSubmitting.set(false);
         this.errorMessage.set(
           error.status === 401
-            ? 'Invalid email, student ID number, or password.'
+            ? 'Invalid Guidance email or password.'
             : 'Something went wrong signing you in. Please try again.',
         );
       },

@@ -1,8 +1,4 @@
 <h1>Pending Evaluations</h1>
-<p style="color: var(--color-text-muted); margin: 0 0 1.25rem;">
-  Your real approved class memberships for the current evaluation period. Eligibility is always based on approved
-  class membership, never on picking an instructor yourself.
-</p>
 
 @if (errorMessage()) {
   <div class="banner-error">{{ errorMessage() }}</div>
@@ -25,7 +21,7 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Subject</th>
+          <th>Assigned subjects</th>
           <th>Section</th>
           <th>Instructor</th>
           <th></th>
@@ -45,14 +41,14 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="4" class="empty-state">Nothing pending - you're all caught up for this period.</td>
+            <td colspan="4" class="empty-state">{{ completed().length ? "You're all caught up for this period." : 'No evaluations are currently assigned to you.' }}</td>
           </tr>
         }
       </tbody>
     </table>
   </div>
 
-  <div class="card">
+  <section>
     <h3 style="margin-top: 0;">Completed ({{ completed().length }})</h3>
 
     @if (completed().length === 0) {
@@ -81,5 +77,5 @@
         </table>
       </div>
     }
-  </div>
+  </section>
 }

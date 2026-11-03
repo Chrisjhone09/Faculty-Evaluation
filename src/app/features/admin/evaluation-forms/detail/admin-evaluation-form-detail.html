@@ -9,6 +9,8 @@
 @if (loading()) {
   <p class="loading-row"><span class="spinner" aria-hidden="true"></span> Loading…</p>
 } @else if (form(); as f) {
+  <p class="order-status" role="status">{{ orderStatus() }}</p>
+  <div [attr.inert]="reordering() ? '' : null" [attr.aria-busy]="reordering()">
   <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem;">
     <div>
       <h1 style="display: flex; align-items: center; gap: 0.6rem;">
@@ -26,6 +28,7 @@
     <button type="button" class="btn btn-sm" (click)="openEditForm()">Edit details</button>
   </div>
 
+  <p class="reorder-hint">Drag the ⠿ handle to reorder categories or questions. You can also focus a handle and use the Up and Down arrow keys. Changes save automatically.</p>
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
     <h3 style="margin: 0;">Categories & questions</h3>
     <button type="button" class="btn btn-sm btn-primary" (click)="openAddCategory()">+ Add category</button>
@@ -37,9 +40,17 @@
     </div>
   } @else {
     @for (category of f.categories; track category.id) {
-      <div class="card" style="margin-bottom: 1rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-          <h4 style="margin: 0;">{{ category.name }} <span class="hint" style="color: var(--color-text-subtle); font-weight: 400;">(order {{ category.displayOrder }})</span></h4>
+      <div class="card category-card" [class.drop-target]="dropTarget() === category.id"
+        (dragover)="dragOver($event, category.id)" (drop)="drop($event, category.id)">
+        <div class="category-heading">
+          <div class="category-title">
+            <button type="button" class="drag-handle" draggable="true"
+              [attr.aria-label]="'Reorder category: ' + category.name" title="Drag to reorder · Up/Down keys to move"
+              (dragstart)="startDrag($event, category.id)" (dragend)="endDrag()"
+              (keydown.arrowup)="$event.preventDefault(); moveBy(category.id, -1)"
+              (keydown.arrowdown)="$event.preventDefault(); moveBy(category.id, 1)">⠿</button>
+            <h4 style="margin: 0;">{{ category.name }}</h4>
+          </div>
           <div style="display: flex; gap: 0.5rem;">
             <button type="button" class="btn btn-sm" (click)="openAddQuestion(category)">+ Add question</button>
             <button type="button" class="btn btn-sm" (click)="openEditCategory(category)">Edit</button>
@@ -61,18 +72,25 @@
             <table class="data-table">
               <thead>
                 <tr>
+                  <th class="handle-column"><span class="sr-only">Reorder</span></th>
                   <th>Question</th>
                   <th>Type</th>
-                  <th>Order</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 @for (question of category.questions; track question.id) {
-                  <tr>
-                    <td>{{ question.text }}</td>
+                  <tr [class.drop-target]="dropTarget() === question.id"
+                    (dragover)="dragOver($event, question.id, category.id)" (drop)="drop($event, question.id, category.id)">
+                    <td class="handle-column">
+                      <button type="button" class="drag-handle" draggable="true"
+                        [attr.aria-label]="'Reorder question: ' + question.text" title="Drag to reorder · Up/Down keys to move"
+                        (dragstart)="startDrag($event, question.id, category.id)" (dragend)="endDrag()"
+                        (keydown.arrowup)="$event.preventDefault(); moveBy(question.id, -1, category.id)"
+                        (keydown.arrowdown)="$event.preventDefault(); moveBy(question.id, 1, category.id)">⠿</button>
+                    </td>
+                    <td>{{ question.text }} @if (question.isReverseScored) { <span class="badge badge-warning">Reverse scored</span> }</td>
                     <td><span class="badge badge-primary">{{ questionTypeLabel(question.questionType) }}</span></td>
-                    <td>{{ question.displayOrder }}</td>
                     <td style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                       <button type="button" class="btn btn-sm" (click)="openEditQuestion(category, question)">Edit</button>
                       <button
@@ -93,6 +111,7 @@
       </div>
     }
   }
+  </div>
 }
 
 <app-modal [open]="showEditFormModal()" title="Edit form details" (closed)="showEditFormModal.set(false)">
@@ -136,10 +155,6 @@
       <label for="category-name">Name</label>
       <input id="category-name" type="text" formControlName="name" placeholder="e.g. Teaching Effectiveness" />
     </div>
-    <div class="form-field">
-      <label for="category-order">Display order</label>
-      <input id="category-order" type="number" min="0" formControlName="displayOrder" />
-    </div>
 
     @if (categoryError()) {
       <div class="banner-error">{{ categoryError() }}</div>
@@ -172,10 +187,9 @@
         }
       </select>
     </div>
-    <div class="form-field">
-      <label for="question-order">Display order</label>
-      <input id="question-order" type="number" min="0" formControlName="displayOrder" />
-    </div>
+    @if (questionForm.controls.questionType.value === 'Likert1to5') {
+      <label class="checkbox-row"><input type="checkbox" formControlName="isReverseScored" /> Reverse scoring</label>
+    }
 
     @if (questionError()) {
       <div class="banner-error">{{ questionError() }}</div>

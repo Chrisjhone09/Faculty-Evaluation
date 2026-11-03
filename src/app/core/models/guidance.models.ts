@@ -3,6 +3,7 @@ import { CategoryRatingDto, QuestionRatingDto } from './dean.models';
 import { QuestionTypeValue } from './evaluation.models';
 
 export interface GuidanceFacultyPerformanceRowDto {
+  analytics: FacultyAnalyticsDto;
   instructorId: string;
   instructorName: string;
   employeeNumber: string;
@@ -33,6 +34,7 @@ export interface GuidanceEvaluationCommentDto {
 }
 
 export interface GuidanceFacultyPerformanceDetailDto {
+  analytics: FacultyAnalyticsDto;
   savedSummary: GuidanceFacultySummaryDto | null;
   respondentCount: number;
   ratingDistribution: { rating: number; count: number }[];
@@ -120,6 +122,7 @@ export const FACULTY_FLAGGING_LOW_RATING_THRESHOLD = 3.0;
 export const FACULTY_FLAGGING_LOW_RAPID_APPRAISAL_THRESHOLD = 7.0;
 
 export interface GuidanceAnalyticsDto {
+  weightedScore: number | null;
   submittedStudents: number;
   eligibleStudents: number;
   periodId: string | null;
@@ -135,8 +138,20 @@ export interface GuidanceAnalyticsDto {
   rapidAppraisalAverageRating: number | null;
   trend: { date: string; count: number }[];
   departments: {
+    weightedScore: number | null;
     id: string; name: string; facultyCount: number; submitted: number;
     eligible: number; completed: number; averageRating: number | null;
     rapidAppraisalAverageRating: number | null;
   }[];
+}
+
+export interface FacultyAnalyticsDto {
+  scoreSentiment: string | null; balancedSentiment: boolean;
+  periodId: string | null; periodName: string;
+  minimumRespondents: number; minimumCommentRespondents: number;
+  inventoryScore: number | null; rapidAppraisalScore: number | null; weightedScore: number | null;
+  eligibleStudents: number; responseRate: number | null;
+  positive: number; neutral: number; negative: number; unclassifiedComments: number;
+  writtenRespondents: number; hasReliableSentiment: boolean; dominantSentiment: string | null;
+  comparison: string; interpretation: string;
 }

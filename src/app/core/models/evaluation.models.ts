@@ -22,6 +22,7 @@ export const EvaluationPeriodStatus = {
 export type EvaluationPeriodStatusValue = (typeof EvaluationPeriodStatus)[keyof typeof EvaluationPeriodStatus];
 
 export interface EvaluationQuestionDto {
+  isReverseScored?: boolean;
   id: string;
   text: string;
   questionType: QuestionTypeValue;
@@ -62,6 +63,7 @@ export interface CreateEvaluationCategoryRequest {
 export type UpdateEvaluationCategoryRequest = CreateEvaluationCategoryRequest;
 
 export interface CreateEvaluationQuestionRequest {
+  isReverseScored?: boolean;
   text: string;
   questionType: QuestionTypeValue;
   displayOrder: number;
@@ -70,6 +72,8 @@ export interface CreateEvaluationQuestionRequest {
 export type UpdateEvaluationQuestionRequest = CreateEvaluationQuestionRequest;
 
 export interface EvaluationPeriodDto {
+  minimumRespondents: number;
+  minimumCommentRespondents: number;
   id: string;
   name: string;
   startDate: string;

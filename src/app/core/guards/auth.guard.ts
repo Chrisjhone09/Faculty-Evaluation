@@ -8,7 +8,7 @@ import { AuthService } from '../auth/auth.service';
  * purely so unauthenticated users get an instant redirect instead of a
  * flash of a page that will just 401.
  */
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -16,6 +16,6 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  router.navigate(['/login']);
+  router.navigate([state.url.startsWith('/guidance') ? '/guidance/login' : '/student/login']);
   return false;
 };

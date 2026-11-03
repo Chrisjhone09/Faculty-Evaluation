@@ -1,0 +1,62 @@
+<app-page-header title="Sentiment Validation" />
+<app-report-period [value]="periodId()" [disabled]="busy() || !!detail()" (selected)="loadPeriod($event)" />
+@if (error()) { <div class="banner-error" role="alert">{{ error() }} <button class="btn btn-sm" [disabled]="busy()" (click)="retry()">Retry</button></div> }
+@if (message()) { <p role="status" class="saved-message">{{ message() }}</p> }
+@if (detail(); as d) {
+  <div class="review-heading"><button class="btn" [disabled]="busy()" (click)="back()"><app-icon name="arrow-left" /> Review batches</button><span class="badge badge-muted">{{ d.completedAtUtc ? 'Completed' : 'Blind review' }}</span></div>
+  <h2>{{ d.name }}</h2>
+  <p class="muted">{{ d.periodName }} &middot; {{ d.items.length }} comments</p>
+  @if (!d.completedAtUtc) {
+    <details class="rubric"><summary>Labeling rubric</summary><p>{{ d.rubric }}</p></details>
+    <div class="review-toolbar">
+      <div><strong>{{ labeledCount() }} / {{ d.items.length }}</strong> labeled <progress aria-label="Labeling progress" [value]="labeledCount()" [max]="d.items.length"></progress></div>
+      <div class="review-actions"><button class="btn" [disabled]="busy() || !dirty()" (click)="save()"><app-icon name="check" /> Save labels</button>
+      <button class="btn btn-primary" [disabled]="busy() || dirty() || labeledCount() !== d.items.length" (click)="complete()"><app-icon name="eye" /> Complete &amp; reveal results</button></div>
+    </div>
+    <p class="muted">AI results hidden until completion. Completed labels are locked.</p>
+  } @else if (d.metrics; as m) {
+    <div class="metrics" aria-label="Validation metrics">
+      <div><span>Accuracy</span><strong>{{ m.accuracy === null ? '--' : (m.accuracy | percent:'1.1-1') }}</strong></div>
+      <div><span>Macro-F1</span><strong>{{ m.macroF1 === null ? '--' : (m.macroF1 | percent:'1.1-1') }}</strong></div>
+      <div><span>AI coverage</span><strong>{{ m.coverage | percent:'1.1-1' }}</strong></div>
+      <div><span>Compared / reviewed</span><strong>{{ m.classified }} / {{ m.total }}</strong></div>
+    </div>
+    <p class="muted">{{ m.excluded }} comments excluded by reviewer. {{ m.unclassified }} unavailable AI classifications excluded from accuracy and F1. Results describe this sample; they do not certify future accuracy.</p>
+    @if (m.total < 100) { <p class="badge badge-warning">Small validation sample</p> }
+    <section class="results-section"><h3>Performance by sentiment</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Human label</th><th>Support</th><th>AI predictions</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead><tbody>
+      @for (c of m.classes; track c.sentiment) { <tr><td>{{ c.sentiment }}</td><td>{{ c.support }}</td><td>{{ c.predicted }}</td><td>{{ c.precision === null ? '--' : (c.precision | percent:'1.1-1') }}</td><td>{{ c.recall === null ? '--' : (c.recall | percent:'1.1-1') }}</td><td>{{ c.f1 | percent:'1.1-1' }}</td></tr> }
+    </tbody></table></div><p class="muted">Macro-F1 averages all three labels. A label with no support or predictions contributes zero.</p></section>
+    <section class="results-section"><h3>Confusion matrix</h3><div class="table-wrap"><table class="data-table confusion"><thead><tr><th>Human / AI</th>@for (s of sentiments; track s) { <th>{{ s }}</th> }</tr></thead><tbody>
+      @for (h of sentiments; track h) { <tr><th scope="row">{{ h }}</th>@for (a of sentiments; track a) { <td [class.correct]="h === a">{{ cell(h, a) }}</td> }</tr> }
+    </tbody></table></div></section>
+    <section class="results-section"><h3>Classifier versions</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Method</th><th>Model</th><th>Prompt</th><th>Compared / reviewed</th><th>Accuracy</th><th>Macro-F1</th></tr></thead><tbody>
+      @for (c of d.cohorts; track $index) { <tr><td>{{ c.method }}</td><td>{{ c.model }}</td><td>{{ c.promptVersion }}</td><td>{{ c.metrics.classified }} / {{ c.metrics.total }}</td><td>{{ c.metrics.accuracy === null ? '--' : (c.metrics.accuracy | percent:'1.1-1') }}</td><td>{{ c.metrics.macroF1 === null ? '--' : (c.metrics.macroF1 | percent:'1.1-1') }}</td></tr> }
+    </tbody></table></div></section>
+  }
+  <section class="review-items" aria-label="Review comments">
+    @for (item of pageItems(); track item.id; let index = $index) {
+      <article class="review-item"><span class="comment-number">Comment {{ page() * 10 + index + 1 }}</span><p>{{ item.commentText }}</p>
+        @if (!d.completedAtUtc) {
+          <fieldset [disabled]="busy()"><legend>Human sentiment</legend><div class="sentiment-options">
+          @for (s of sentiments; track s) { <label [class.selected]="labels()[item.id] === s"><input type="radio" [name]="item.id" [value]="s" [checked]="labels()[item.id] === s" (change)="label(item.id, s)" />{{ s }}</label> }
+          <label [class.selected]="labels()[item.id] === 'Excluded'"><input type="radio" [name]="item.id" value="Excluded" [checked]="labels()[item.id] === 'Excluded'" (change)="label(item.id, 'Excluded')" />Unable to label</label>
+          </div></fieldset>
+        } @else {
+          <div class="item-results"><span>Human: <strong>{{ item.isExcluded ? 'Unable to label' : item.humanSentiment }}</strong></span><span>AI: <strong>{{ item.aiSentiment || 'Unclassified' }}</strong></span><span class="badge" [class.badge-warning]="item.agreement === 'Disagrees'" [class.badge-muted]="item.agreement !== 'Disagrees'">{{ item.agreement }}</span></div>
+        }
+      </article>
+    }
+  </section>
+  <nav class="pagination" aria-label="Review pages"><button class="btn btn-icon" title="Previous page" aria-label="Previous page" [disabled]="page() === 0" (click)="page.set(page() - 1)"><app-icon name="chevron-left" /></button><span>{{ page() + 1 }} / {{ pageCount() }}</span><button class="btn btn-icon" title="Next page" aria-label="Next page" [disabled]="page() + 1 >= pageCount()" (click)="page.set(page() + 1)"><app-icon name="chevron-right" /></button></nav>
+} @else {
+  <form class="batch-form" [formGroup]="form" (ngSubmit)="create()"><h2>New review batch</h2><div class="batch-fields">
+    <div class="form-field"><label for="batch-name">Batch name</label><input id="batch-name" formControlName="name" maxlength="150" /></div>
+    <div class="form-field"><label for="sample-size">Sample size</label><input id="sample-size" type="number" min="1" max="300" formControlName="sampleSize" /></div>
+    <button class="btn btn-primary" type="submit" [disabled]="busy() || !periodId()"><app-icon name="plus" /> Create batch</button>
+  </div>@if (form.invalid && form.touched) { <p class="field-error">Enter a batch name and a whole-number sample size from 1 to 300.</p> }</form>
+  @if (busy()) { <p class="loading-row" role="status">Loading...</p> }
+  <div class="table-wrap"><table class="data-table data-table-stack"><thead><tr><th>Batch</th><th>Progress</th><th>Created</th><th>Status</th><th></th></tr></thead><tbody>
+    @for (batch of batches(); track batch.id) { <tr><td data-label="Batch">{{ batch.name }}</td><td data-label="Progress">{{ batch.labeled }} / {{ batch.total }}</td><td data-label="Created">{{ batch.createdAtUtc | date:'mediumDate' }}</td><td data-label="Status">{{ batch.completedAtUtc ? 'Completed' : 'In progress' }}</td><td><button class="btn btn-sm" [disabled]="busy()" (click)="open(batch.id)"><app-icon [name]="batch.completedAtUtc ? 'chart' : 'edit'" /> {{ batch.completedAtUtc ? 'View results' : 'Continue review' }}</button></td></tr> }
+    @empty { <tr><td colspan="5" class="empty-state">No validation batches for this period.</td></tr> }
+  </tbody></table></div>
+}

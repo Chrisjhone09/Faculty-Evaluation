@@ -1,7 +1,6 @@
 <div class="page-header">
   <div>
     <h2>Departments</h2>
-    <p style="color: var(--color-text-muted); margin: 0;">Academic departments and their assigned Dean.</p>
   </div>
   <button type="button" class="btn btn-primary" (click)="openCreateModal()"><app-icon name="plus" /> New department</button>
 </div>
@@ -23,7 +22,6 @@
         <tr>
           <th>Code</th>
           <th>Name</th>
-          <th>Dean</th>
           <th>Status</th>
           <th></th>
         </tr>
@@ -33,7 +31,6 @@
           <tr>
             <td>{{ department.code }}</td>
             <td>{{ department.name }}</td>
-            <td>{{ deanLabel(department) }}</td>
             <td>
               @if (department.isActive) {
                 <span class="badge badge-success">Active</span>
@@ -42,7 +39,6 @@
               }
             </td>
             <td style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-              <button type="button" class="btn btn-sm" (click)="openAssignDean(department)">Assign dean</button>
               <button type="button" class="btn btn-sm" (click)="openEditModal(department)">Edit</button>
             </td>
           </tr>
@@ -102,36 +98,4 @@
       </button>
     </div>
   </form>
-</app-modal>
-
-<app-modal [open]="assigningDeanFor() !== null" title="Assign dean" (closed)="assigningDeanFor.set(null)">
-  @if (assigningDeanFor(); as department) {
-    <p style="margin-top: 0; color: var(--color-text-muted);">{{ department.name }}</p>
-
-    <div class="form-field">
-      <label for="dean-select">Dean</label>
-      <select
-        id="dean-select"
-        [value]="selectedDeanUserId()"
-        (change)="selectedDeanUserId.set($any($event.target).value)"
-      >
-        <option value="" disabled>Select a user…</option>
-        @for (user of users(); track user.id) {
-          <option [value]="user.id">{{ user.fullName }} ({{ user.email }})</option>
-        }
-      </select>
-      <span class="hint">Any active user can be assigned - give them the Dean role from Users afterward.</span>
-    </div>
-
-    @if (assignError()) {
-      <div class="banner-error">{{ assignError() }}</div>
-    }
-
-    <div class="form-actions">
-      <button type="button" class="btn" (click)="assigningDeanFor.set(null)">Cancel</button>
-      <button type="button" class="btn btn-primary" [disabled]="assignSubmitting()" (click)="submitAssignDean()">
-        {{ assignSubmitting() ? 'Saving…' : 'Assign' }}
-      </button>
-    </div>
-  }
 </app-modal>

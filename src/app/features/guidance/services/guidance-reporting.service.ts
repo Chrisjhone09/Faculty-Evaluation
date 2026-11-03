@@ -25,28 +25,29 @@ export class GuidanceReportingService {
     return this.http.get<GuidanceAnalyticsDto>(`${this.baseUrl}/analytics`, { params });
   }
 
-  getSummary(): Observable<GuidanceSummaryDto> {
-    return this.http.get<GuidanceSummaryDto>(`${this.baseUrl}/summary`);
+  getSummary(periodId?: string): Observable<GuidanceSummaryDto> {
+    return this.http.get<GuidanceSummaryDto>(`${this.baseUrl}/summary`, { params: periodId ? { periodId } : {} });
   }
 
-  getFacultyPerformance(): Observable<GuidanceFacultyPerformanceRowDto[]> {
-    return this.http.get<GuidanceFacultyPerformanceRowDto[]>(`${this.baseUrl}/faculty-performance`);
+  getFacultyPerformance(periodId?: string): Observable<GuidanceFacultyPerformanceRowDto[]> {
+    return this.http.get<GuidanceFacultyPerformanceRowDto[]>(`${this.baseUrl}/faculty-performance`, { params: periodId ? { periodId } : {} });
   }
 
-  getFacultyPerformanceDetail(instructorId: string): Observable<GuidanceFacultyPerformanceDetailDto> {
-    return this.http.get<GuidanceFacultyPerformanceDetailDto>(`${this.baseUrl}/faculty-performance/${instructorId}/detail`);
+  getFacultyPerformanceDetail(instructorId: string, periodId?: string): Observable<GuidanceFacultyPerformanceDetailDto> {
+    return this.http.get<GuidanceFacultyPerformanceDetailDto>(`${this.baseUrl}/faculty-performance/${instructorId}/detail`, { params: periodId ? { periodId } : {} });
   }
 
-  getDepartmentPerformance(): Observable<GuidanceDepartmentPerformanceDto[]> {
-    return this.http.get<GuidanceDepartmentPerformanceDto[]>(`${this.baseUrl}/department-performance`);
+  getDepartmentPerformance(periodId?: string): Observable<GuidanceDepartmentPerformanceDto[]> {
+    return this.http.get<GuidanceDepartmentPerformanceDto[]>(`${this.baseUrl}/department-performance`, { params: periodId ? { periodId } : {} });
   }
 
-  getFlaggedFaculty(): Observable<GuidanceFlaggedFacultyDto[]> {
-    return this.http.get<GuidanceFlaggedFacultyDto[]>(`${this.baseUrl}/flagged-faculty`);
+  getFlaggedFaculty(periodId?: string): Observable<GuidanceFlaggedFacultyDto[]> {
+    return this.http.get<GuidanceFlaggedFacultyDto[]>(`${this.baseUrl}/flagged-faculty`, { params: periodId ? { periodId } : {} });
   }
 
-  getComments(departmentId: string | null, instructorId: string | null): Observable<GuidanceCommentsResultDto> {
+  getComments(departmentId: string | null, instructorId: string | null, periodId?: string): Observable<GuidanceCommentsResultDto> {
     let params = new HttpParams();
+    if (periodId) params = params.set('periodId', periodId);
     if (departmentId) {
       params = params.set('departmentId', departmentId);
     }
@@ -57,7 +58,7 @@ export class GuidanceReportingService {
   }
 
   /** On-demand only - call this from a button click handler, never automatically. */
-  generateFacultySummary(instructorId: string): Observable<GuidanceFacultySummaryDto> {
-    return this.http.post<GuidanceFacultySummaryDto>(`${this.baseUrl}/faculty-performance/${instructorId}/summary`, {});
+  generateFacultySummary(instructorId: string, periodId?: string): Observable<GuidanceFacultySummaryDto> {
+    return this.http.post<GuidanceFacultySummaryDto>(`${this.baseUrl}/faculty-performance/${instructorId}/summary`, {}, { params: periodId ? { periodId } : {} });
   }
 }

@@ -39,6 +39,11 @@ export class AuthService {
       .pipe(tap((response) => this.setSession(response)));
   }
 
+  studentLogin(studentNumber: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${API_BASE_URL}/auth/student-login`, { studentNumber })
+      .pipe(tap(response => this.setSession(response)));
+  }
+
   /**
    * Public student sign-up. No session is established - the account comes
    * back approved when on a Guidance master list, or pending manual approval.

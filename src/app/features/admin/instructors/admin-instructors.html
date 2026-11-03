@@ -1,9 +1,6 @@
 <div class="page-header">
   <div>
     <h2>Instructors</h2>
-    <p style="color: var(--color-text-muted); margin: 0;">
-      Links a user account (give them the Instructor role from Users first) to an instructor profile.
-    </p>
   </div>
   <button type="button" class="btn btn-primary" (click)="openCreateModal()"><app-icon name="plus" /> New instructor</button>
 </div>
@@ -25,7 +22,6 @@
         <tr>
           <th>Name</th>
           <th>Employee #</th>
-          <th>Email</th>
           <th>Department</th>
           <th>Status</th>
           <th></th>
@@ -36,7 +32,6 @@
           <tr>
             <td>{{ instructor.firstName }} {{ instructor.lastName }}</td>
             <td>{{ instructor.employeeNumber }}</td>
-            <td>{{ instructor.email ?? '—' }}</td>
             <td>{{ instructor.departmentName }}</td>
             <td>
               @if (instructor.isActive) {
@@ -57,24 +52,6 @@
 
 <app-modal [open]="showCreateModal()" title="New instructor" (closed)="showCreateModal.set(false)">
   <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
-    <div class="form-field">
-      <label for="inst-user">User account</label>
-      <select
-        id="inst-user"
-        formControlName="userId"
-        (change)="onUserSelected($any($event.target).value)"
-      >
-        <option value="" disabled>Select a user with the Instructor role…</option>
-        @for (user of availableUsers(); track user.id) {
-          <option [value]="user.id">{{ user.fullName }} ({{ user.email }})</option>
-        }
-      </select>
-      @if (availableUsers().length === 0) {
-        <span class="hint">
-          No unlinked users with the Instructor role. Create a user and give them the Instructor role from Users first.
-        </span>
-      }
-    </div>
     <div class="form-field">
       <label for="inst-empno">Employee number</label>
       <input id="inst-empno" type="text" formControlName="employeeNumber" />

@@ -1,0 +1,13 @@
+.reorder-hint { color: var(--color-text-muted); font-size: 13px; line-height: 1.6; margin: 0 0 20px; }
+.order-status { color: var(--color-text-muted); font-size: 13px; }
+.order-status:empty { display: none; }
+.category-card { margin-bottom: 20px; }
+.category-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.category-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.drag-handle { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text-muted); font: inherit; font-size: 24px; cursor: grab; }
+.drag-handle:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.drag-handle:active { cursor: grabbing; }
+.drag-handle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.handle-column { width: 52px; }
+.drop-target { outline: 2px dashed var(--color-primary); outline-offset: -2px; background: var(--color-surface-hover); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

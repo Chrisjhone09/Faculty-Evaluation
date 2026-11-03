@@ -15,16 +15,18 @@ export class GuidanceShell {
         { label: 'Overview', path: '/guidance/dashboard', icon: 'dashboard' },
         { label: 'Faculty', path: '/guidance/faculty', icon: 'star' },
         { label: 'Comments', path: '/guidance/comments', icon: 'message' },
+        { label: 'Sentiment Validation', path: '/guidance/sentiment-validation', icon: 'check-circle' },
       ],
     },
     {
       label: 'Management',
       items: [
-        { label: 'Users & Access', path: '/guidance/users', icon: 'users' },
+        { label: 'Guidance Accounts', path: '/guidance/users', icon: 'users' },
         { label: 'Student Master List', path: '/guidance/student-masterlist', icon: 'clipboard' },
         { label: 'Academic Structure', path: '/guidance/academics', icon: 'building' },
         { label: 'Subjects & Rosters', path: '/guidance/rosters', icon: 'graduation' },
         { label: 'Evaluations', path: '/guidance/evaluations', icon: 'clipboard' },
+        { label: 'Evaluation Settings', path: '/guidance/settings', icon: 'chart' },
       ],
     },
   ];

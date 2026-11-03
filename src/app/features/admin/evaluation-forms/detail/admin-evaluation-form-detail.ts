@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { concatMap, from, toArray } from 'rxjs';
 import {
   EvaluationCategoryDto,
   EvaluationFormDto,
@@ -17,6 +18,7 @@ import { AdminEvaluationFormsService } from '../../services/admin-evaluation-for
   selector: 'app-admin-evaluation-form-detail',
   imports: [ReactiveFormsModule, Modal, RouterLink],
   templateUrl: './admin-evaluation-form-detail.html',
+  styleUrls: ['./admin-evaluation-form-detail.css'],
 })
 export class AdminEvaluationFormDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -29,6 +31,79 @@ export class AdminEvaluationFormDetail implements OnInit {
   protected readonly form = signal<EvaluationFormDto | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly reordering = signal(false);
+  protected readonly orderStatus = signal('');
+  protected readonly dropTarget = signal<string | null>(null);
+  private dragged: { id: string; categoryId?: string } | null = null;
+
+  protected startDrag(event: DragEvent, id: string, categoryId?: string): void {
+    if (this.reordering()) { event.preventDefault(); return; }
+    event.stopPropagation();
+    this.dragged = { id, categoryId };
+    event.dataTransfer?.setData('text/plain', id);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected dragOver(event: DragEvent, id: string, categoryId?: string): void {
+    if (!this.dragged || this.dragged.categoryId !== categoryId || this.dragged.id === id) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.dropTarget.set(id);
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+  }
+
+  protected endDrag(): void { this.dragged = null; this.dropTarget.set(null); }
+
+  protected drop(event: DragEvent, id: string, categoryId?: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const source = this.dragged;
+    this.endDrag();
+    if (source && source.categoryId === categoryId) this.reposition(source.id, id, categoryId);
+  }
+
+  protected moveBy(id: string, offset: number, categoryId?: string): void {
+    const f = this.form();
+    const items = categoryId ? f?.categories.find(c => c.id === categoryId)?.questions : f?.categories;
+    if (!items) return;
+    const target = items[items.findIndex(item => item.id === id) + offset];
+    if (target) this.reposition(id, target.id, categoryId);
+  }
+
+  private reposition(id: string, targetId: string, categoryId?: string): void {
+    const f = this.form();
+    if (!f || this.reordering() || id === targetId) return;
+    const items = categoryId ? f.categories.find(c => c.id === categoryId)?.questions : f.categories;
+    if (!items) return;
+    const source = items.findIndex(item => item.id === id);
+    const target = items.findIndex(item => item.id === targetId);
+    if (source < 0 || target < 0) return;
+    const ordered = [...items];
+    ordered.splice(target, 0, ordered.splice(source, 1)[0]);
+    this.reordering.set(true);
+    this.errorMessage.set(null);
+    this.orderStatus.set('Saving order…');
+    // Save sequentially because each update uses the same server-side form context.
+    from(ordered).pipe(concatMap((item, displayOrder) => categoryId
+      ? this.formsService.updateQuestion(this.formId, categoryId, item.id, {
+          ...(item as EvaluationQuestionDto), displayOrder,
+        })
+      : this.formsService.updateCategory(this.formId, item.id, {
+          name: (item as EvaluationCategoryDto).name, displayOrder,
+        })), toArray()).subscribe({
+      next: () => {
+        this.reordering.set(false);
+        this.orderStatus.set('Order saved.');
+        this.refresh();
+      },
+      error: () => {
+        this.reordering.set(false);
+        this.orderStatus.set('');
+        this.errorMessage.set('Could not finish saving the order. The list has been reloaded; please check it and try again.');
+        this.refresh();
+      },
+    });
+  }
 
   private readonly formId = this.route.snapshot.paramMap.get('id')!;
 
@@ -58,6 +133,7 @@ export class AdminEvaluationFormDetail implements OnInit {
   protected readonly questionSubmitting = signal(false);
   protected readonly questionError = signal<string | null>(null);
   protected readonly questionForm = this.formBuilder.nonNullable.group({
+    isReverseScored: [false],
     text: ['', [Validators.required, Validators.maxLength(500)]],
     questionType: ['Likert1to5' as QuestionTypeValue, [Validators.required]],
     displayOrder: [0, [Validators.required, Validators.min(0)]],
@@ -131,7 +207,7 @@ export class AdminEvaluationFormDetail implements OnInit {
   // ---- Categories ----
 
   protected openAddCategory(): void {
-    const nextOrder = this.form()?.categories.length ?? 0;
+    const nextOrder = Math.max(-1, ...(this.form()?.categories.map(c => c.displayOrder) ?? [])) + 1;
     this.categoryForm.reset({ name: '', displayOrder: nextOrder });
     this.editingCategory.set(null);
     this.categoryError.set(null);
@@ -200,7 +276,7 @@ export class AdminEvaluationFormDetail implements OnInit {
   // ---- Questions ----
 
   protected openAddQuestion(category: EvaluationCategoryDto): void {
-    this.questionForm.reset({ text: '', questionType: QuestionType.Likert1to5, displayOrder: category.questions.length });
+    this.questionForm.reset({ text: '', questionType: QuestionType.Likert1to5, displayOrder: Math.max(-1, ...category.questions.map(q => q.displayOrder)) + 1, isReverseScored: false });
     this.editingQuestion.set(null);
     this.questionError.set(null);
     this.questionModalCategoryId.set(category.id);
@@ -209,6 +285,7 @@ export class AdminEvaluationFormDetail implements OnInit {
   protected openEditQuestion(category: EvaluationCategoryDto, question: EvaluationQuestionDto): void {
     this.questionForm.setValue({
       text: question.text,
+      isReverseScored: question.isReverseScored ?? false,
       questionType: question.questionType,
       displayOrder: question.displayOrder,
     });
@@ -232,6 +309,7 @@ export class AdminEvaluationFormDetail implements OnInit {
     this.questionSubmitting.set(true);
     this.questionError.set(null);
     const raw = this.questionForm.getRawValue();
+    raw.isReverseScored = raw.questionType === QuestionType.Likert1to5 && raw.isReverseScored;
     const editing = this.editingQuestion();
 
     const request$ = editing

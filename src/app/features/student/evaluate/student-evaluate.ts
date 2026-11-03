@@ -28,10 +28,10 @@ export class StudentEvaluate implements OnInit {
   private readonly evaluationsService = inject(StudentEvaluationsService);
 
   protected readonly QuestionType = QuestionType;
-  protected readonly ratingScale = [1, 2, 3, 4, 5];
+  protected readonly ratingScale = [5, 4, 3, 2, 1];
   protected readonly rapidAppraisalScale = Array.from(
     { length: RAPID_APPRAISAL_MAX_RATING - RAPID_APPRAISAL_MIN_RATING + 1 },
-    (_, i) => RAPID_APPRAISAL_MIN_RATING + i,
+    (_, i) => RAPID_APPRAISAL_MAX_RATING - i,
   );
 
   private readonly classMembershipId = this.route.snapshot.paramMap.get('classMembershipId')!;
@@ -81,7 +81,7 @@ export class StudentEvaluate implements OnInit {
 
   protected submit(): void {
     const form = this.form();
-    if (!form) return;
+    if (!form || this.submitting()) return;
 
     this.submitError.set(null);
     this.fieldErrors.set({});
@@ -117,7 +117,7 @@ export class StudentEvaluate implements OnInit {
           this.submitting.set(false);
           if (error.status === 400 && error.error?.errors) {
             this.fieldErrors.set(this.flattenErrors(error.error.errors));
-            this.submitError.set('Please answer every question before submitting.');
+            this.submitError.set('Please complete all required ratings before submitting.');
           } else {
             this.submitError.set(error.error?.detail ?? 'Could not submit this evaluation.');
           }

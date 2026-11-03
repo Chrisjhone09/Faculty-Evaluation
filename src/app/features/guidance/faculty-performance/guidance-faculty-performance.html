@@ -1,7 +1,7 @@
 <app-page-header
   title="Faculty Performance"
-  description="Evaluation results across departments."
 />
+<app-report-period [value]="periodId()" (selected)="loadPeriod($event)" />
 
 @if (errorMessage()) {
   <div class="banner-error">
@@ -41,8 +41,7 @@
   <div class="banner-warning">
     <app-icon name="alert-triangle" size="sm" />
     <div class="alert-body">
-      Instructors averaging at or below <strong>3.0 / 5</strong>, or <strong>7.0 / 10</strong> on Rapid Appraisal.
-      Flagging only runs once an instructor clears the anonymity threshold.
+      Faculty with weighted scores below 50/100 or conflicting numerical and written sentiment results.
     </div>
   </div>
 }
@@ -86,7 +85,7 @@
       [title]="activeTab() === 'flagged' && !hasActiveFilters() ? 'No flagged faculty' : 'No matches'"
       [message]="
         activeTab() === 'flagged' && !hasActiveFilters()
-          ? 'Nobody is currently below the rating thresholds. This list updates as new evaluations come in.'
+          ? 'No faculty results currently require review.'
           : 'No faculty match the current search and filters.'
       "
     >
@@ -122,14 +121,14 @@
             </th>
             <th class="cell-numeric">
               <app-sort-header
-                label="Rating"
+                label="Weighted score"
                 [direction]="table.sortDirectionFor('rating')"
                 (toggled)="table.toggleSort('rating')"
               />
             </th>
             <th class="cell-numeric">
               <app-sort-header
-                label="Rapid Appraisal"
+                label="Dominant sentiment"
                 [direction]="table.sortDirectionFor('rapid')"
                 (toggled)="table.toggleSort('rapid')"
               />
@@ -157,28 +156,21 @@
               <td data-label="Department">{{ row.departmentName }}</td>
               <td data-label="Responses" class="cell-numeric">{{ row.evaluationsSubmittedCount }}</td>
               <td data-label="Rating" class="cell-numeric">
-                @if (row.meetsAnonymityThreshold && row.averageRating !== null) {
-                  <span class="font-semibold">{{ row.averageRating }}</span
-                  ><span class="text-muted"> / 5</span>
+                @if (row.meetsAnonymityThreshold && row.analytics.weightedScore !== null) {
+                  <span class="font-semibold">{{ row.analytics.weightedScore }}</span
+                  ><span class="text-muted"> / 100</span>
                 } @else if (row.hasEvaluationData) {
                   <span class="text-subtle text-xs">
-                    Scores protected
+                    Insufficient Responses
                   </span>
                 } @else {
                   <span class="text-subtle">&mdash;</span>
                 }
               </td>
-              <td data-label="Rapid Appraisal" class="cell-numeric">
-                @if (row.meetsAnonymityThreshold && row.rapidAppraisalAverageRating !== null) {
-                  <span class="font-semibold">{{ row.rapidAppraisalAverageRating }}</span
-                  ><span class="text-muted"> / 10</span>
-                } @else {
-                  <span class="text-subtle">&mdash;</span>
-                }
-              </td>
+              <td data-label="Dominant sentiment">{{ row.analytics.dominantSentiment || (row.analytics.hasReliableSentiment ? 'Tied' : 'Insufficient Written Feedback') }}</td>
               <td class="cell-actions">
                 @if (row.hasEvaluationData) {
-                  <a class="btn btn-sm" [routerLink]="['/guidance/faculty', row.instructorId]">
+                  <a class="btn btn-sm" [routerLink]="['/guidance/faculty', row.instructorId]" [queryParams]="{ period: periodId() }">
                     {{ row.meetsAnonymityThreshold ? 'View results' : 'View feedback' }}
                     <app-icon name="chevron-right" size="sm" />
                   </a>

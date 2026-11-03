@@ -13,7 +13,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4200',
     headless: true,
-    channel: 'chrome',
+    channel: process.env['PLAYWRIGHT_CHANNEL'] ?? 'chrome',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },

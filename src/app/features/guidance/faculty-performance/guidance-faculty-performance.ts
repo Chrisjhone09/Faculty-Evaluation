@@ -1,3 +1,4 @@
+import { ReportPeriod } from '../shared/report-period';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -23,7 +24,7 @@ type SortKey = 'name' | 'department' | 'submitted' | 'rating' | 'rapid';
  */
 @Component({
   selector: 'app-guidance-faculty-performance',
-  imports: [RouterLink, PageHeader, EmptyState, Icon, SortHeader, TableSearch, Pagination],
+  imports: [RouterLink, PageHeader, EmptyState, Icon, SortHeader, TableSearch, Pagination, ReportPeriod],
   templateUrl: './guidance-faculty-performance.html',
 })
 export class GuidanceFacultyPerformance implements OnInit {
@@ -79,13 +80,18 @@ export class GuidanceFacultyPerformance implements OnInit {
       department: (a, b) => a.departmentName.localeCompare(b.departmentName),
       submitted: (a, b) => a.evaluationsSubmittedCount - b.evaluationsSubmittedCount,
       // Instructors without a visible score sort last regardless of direction.
-      rating: (a, b) => (a.averageRating ?? -1) - (b.averageRating ?? -1),
+      rating: (a, b) => (a.analytics.weightedScore ?? -1) - (b.analytics.weightedScore ?? -1),
       rapid: (a, b) => (a.rapidAppraisalAverageRating ?? -1) - (b.rapidAppraisalAverageRating ?? -1),
     },
   });
 
-  ngOnInit(): void {
-    this.reportingService.getFacultyPerformance().subscribe({
+  protected readonly periodId = signal<string | undefined>(this.route.snapshot.queryParamMap.get('period') ?? undefined);
+  private request?: import('rxjs').Subscription;
+  ngOnInit(): void {}
+  protected loadPeriod(periodId: string | undefined): void {
+    this.request?.unsubscribe(); this.periodId.set(periodId);
+    this.loading.set(true); this.errorMessage.set(null); this.table.goToPage(1);
+    this.request = this.reportingService.getFacultyPerformance(periodId).subscribe({
       next: (rows) => {
         this.rows.set(rows);
         this.loading.set(false);

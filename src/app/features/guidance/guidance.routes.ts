@@ -31,6 +31,8 @@ export const GUIDANCE_ROUTES: Routes = [
         loadComponent: () => import('./comments/guidance-comments').then((m) => m.GuidanceComments),
       },
 
+      { path: 'sentiment-validation', loadComponent: () => import('./sentiment-validation/sentiment-validation').then(m => m.SentimentValidation) },
+      { path: 'settings', loadComponent: () => import('./evaluation-settings/evaluation-settings').then(m => m.EvaluationSettings) },
       { path: 'users', loadComponent: () => import('../admin/users/admin-users').then(m => m.AdminUsers) },
       { path: 'student-masterlist', loadComponent: () => import('./student-masterlist/student-masterlist').then(m => m.StudentMasterlist) },
       { path: 'academics', loadComponent: () => import('../admin/academics/admin-academics').then(m => m.AdminAcademics) },

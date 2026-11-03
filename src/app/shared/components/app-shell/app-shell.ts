@@ -139,6 +139,6 @@ export class AppShell {
 
   protected logout(): void {
     this.authService.logout();
-    window.location.href = '/login';
+    window.location.href = this.title === 'Guidance' ? '/guidance/login' : '/student/login';
   }
 }

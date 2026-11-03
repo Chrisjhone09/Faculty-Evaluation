@@ -1,0 +1,20 @@
+X [ERROR] TS2339: Property 'retry' does not exist on type 'SentimentValidation'. [plugin angular-compiler]
+
+    src/app/features/guidance/sentiment-validation/sentiment-validation.html:3:125:
+      3 │ ...tn-sm" [disabled]="busy()" (click)="retry()">Retry</button></div> }
+        ╵                                        ~~~~~
+
+  Error occurs in the template of component SentimentValidation.
+
+    src/app/features/guidance/sentiment-validation/sentiment-validation.ts:13:15:
+      13 │   templateUrl: './sentiment-validation.html', styleUrl: './sentime...
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] NG2008: Could not find stylesheet file './admin-evaluation-form-detail.css'. [plugin angular-compiler]
+
+    src/app/features/admin/evaluation-forms/detail/admin-evaluation-form-detail.ts:21:12:
+      21 │   styleUrl: './admin-evaluation-form-detail.css',
+         ╵             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+

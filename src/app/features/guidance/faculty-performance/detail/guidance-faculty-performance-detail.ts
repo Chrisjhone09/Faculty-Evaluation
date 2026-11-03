@@ -3,6 +3,7 @@ import { ChartConfiguration } from 'chart.js';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ReportPeriod } from '../../shared/report-period';
 import { AnalyticsChart } from '../../../../shared/charts/analytics-chart';
 import { ProfileAvatar } from '../../../../shared/components/profile-avatar/profile-avatar';
 import { Icon } from '../../../../shared/components/icon/icon';
@@ -17,7 +18,7 @@ import { GuidanceReportingService } from '../../services/guidance-reporting.serv
  */
 @Component({
   selector: 'app-guidance-faculty-performance-detail',
-  imports: [RouterLink, DatePipe, DecimalPipe, AnalyticsChart, ProfileAvatar, Icon],
+  imports: [RouterLink, DatePipe, DecimalPipe, AnalyticsChart, ProfileAvatar, Icon, ReportPeriod],
   styleUrls: ['./faculty-detail.css', './faculty-analytics.css', './faculty-feedback.css'],
   templateUrl: './guidance-faculty-performance-detail.html',
 })
@@ -97,8 +98,21 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
   protected chartHeight(): number { return Math.min(480, Math.max(220, (this.detail()?.categoryRatings.length ?? 0) * 52)); }
   protected readonly hasTrend = computed(() => this.detail()?.periodPerformance?.some(p => p.averageRating !== null));
 
-  ngOnInit(): void {
-    this.reportingService.getFacultyPerformanceDetail(this.instructorId).subscribe({
+  protected readonly periodId = signal<string | undefined>(this.route.snapshot.queryParamMap.get('period') ?? undefined);
+  private request?: import('rxjs').Subscription;
+  protected readonly sentimentChart = computed<ChartConfiguration>(() => {
+    const a = this.detail()?.analytics;
+    return { type: 'doughnut', data: { labels: ['Positive', 'Neutral', 'Negative'],
+      datasets: [{ data: [a?.positive ?? 0, a?.neutral ?? 0, a?.negative ?? 0],
+        backgroundColor: ['#0f766e', '#64748b', '#d14760'], borderWidth: 0 }] },
+      options: { plugins: { legend: { position: 'bottom' } } } };
+  });
+  ngOnInit(): void {}
+  protected loadPeriod(periodId: string | undefined): void {
+    this.request?.unsubscribe(); this.periodId.set(periodId);
+    this.loading.set(true); this.errorMessage.set(null); this.summary.set(null);
+    this.summaryError.set(null); this.expandedOriginals.set(new Set());
+    this.request = this.reportingService.getFacultyPerformanceDetail(this.instructorId, periodId).subscribe({
       next: (detail) => {
         this.detail.set(detail);
         this.summary.set(detail.savedSummary ?? null);
@@ -139,7 +153,7 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
     this.summaryLoading.set(true);
     this.summaryError.set(null);
 
-    this.reportingService.generateFacultySummary(this.instructorId).subscribe({
+    this.reportingService.generateFacultySummary(this.instructorId, this.periodId()).subscribe({
       next: (result) => {
         this.summary.set(result);
         this.summaryLoading.set(false);

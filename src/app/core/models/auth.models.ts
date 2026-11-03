@@ -67,9 +67,6 @@ export type AppRole = (typeof AppRoles)[keyof typeof AppRoles];
 
 /** Where to land a user right after login, based on their (first) role. */
 export function roleHomePath(roles: string[]): string {
-  if (roles.includes(AppRoles.Admin)) return '/admin';
-  if (roles.includes(AppRoles.Dean)) return '/dean';
-  if (roles.includes(AppRoles.Instructor)) return '/instructor';
   if (roles.includes(AppRoles.Student)) return '/student';
   if (roles.includes(AppRoles.Guidance)) return '/guidance';
   return '/unauthorized';

@@ -41,7 +41,7 @@ export class AdminInstructors implements OnInit {
   protected readonly editError = signal<string | null>(null);
 
   protected readonly createForm = this.formBuilder.nonNullable.group({
-    userId: ['', [Validators.required]],
+    userId: ['00000000-0000-0000-0000-000000000000'],
     employeeNumber: ['', [Validators.required, Validators.maxLength(30)]],
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
     lastName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -59,7 +59,7 @@ export class AdminInstructors implements OnInit {
   ngOnInit(): void {
     this.refresh();
     this.departmentsService.list().subscribe({ next: (departments) => this.departments.set(departments) });
-    this.usersService.list().subscribe({ next: (users) => this.users.set(users) });
+
   }
 
   private refresh(): void {
@@ -77,7 +77,7 @@ export class AdminInstructors implements OnInit {
   }
 
   protected openCreateModal(): void {
-    this.createForm.reset({ userId: '', employeeNumber: '', firstName: '', lastName: '', departmentId: '' });
+    this.createForm.reset({ userId: '00000000-0000-0000-0000-000000000000', employeeNumber: '', firstName: '', lastName: '', departmentId: '' });
     this.createError.set(null);
     this.showCreateModal.set(true);
   }

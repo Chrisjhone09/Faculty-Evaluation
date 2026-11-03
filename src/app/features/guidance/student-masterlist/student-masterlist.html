@@ -1,53 +1,77 @@
 <app-page-header title="Student Master List">
   <button class="btn" type="button" (click)="downloadTemplate()"><app-icon name="download" /> CSV template</button>
+  <button class="btn btn-primary" type="button" [disabled]="!editable()" (click)="open()"><app-icon name="plus" /> Add student</button>
 </app-page-header>
-
+<div class="form-field period-filter"><label for="masterlist-period">Evaluation period</label>
+  <select id="masterlist-period" [value]="periodId()" [disabled]="busy() || saving()" (change)="selectPeriod($any($event.target).value)">
+    @for (period of periods(); track period.id) { <option [value]="period.id">{{ period.name }} ({{ period.status }})</option> }
+    @if (!periods().length) { <option value="">No evaluation periods</option> }
+  </select>
+</div>
+@if (!editable() && periodId()) { <p class="muted">Closed period &middot; Read only</p> }
+@if (editable()) {
 <section class="upload-section" aria-label="School-wide upload">
   <h2>School-wide upload</h2>
   <div class="upload-controls">
-    <div class="form-field"><label for="student-masterlist-file">CSV file - StudentNumber</label>
-      <input id="student-masterlist-file" type="file" accept=".csv,text/csv" [disabled]="busy()" (change)="chooseFile($event)" />
+    <div class="form-field"><label for="student-masterlist-file">CSV or Excel file</label>
+      <input id="student-masterlist-file" type="file" accept=".csv,.xlsx" [disabled]="busy()" (change)="chooseFile($event)" />
     </div>
     <button class="btn" type="button" [disabled]="!selectedFile() || busy()" (click)="validate()"><app-icon name="check" /> {{ busy() ? 'Processing...' : 'Validate' }}</button>
   </div>
   @if (uploadError()) { <div class="banner-error" role="alert">{{ uploadError() }}</div> }
-  @if (result(); as imported) { <div class="banner-success" role="status">Saved {{ imported.importedCount }} student number(s). Skipped {{ imported.skippedCount }}.</div> }
+  @if (result(); as imported) { <div class="banner-success" role="status">Saved {{ imported.importedCount }} students. Skipped {{ imported.skippedCount }} duplicates.</div> }
   @if (report(); as preview) {
     <div class="import-summary">
-      <p>{{ preview.totalRows }} row(s) &middot; {{ preview.valid.length }} valid &middot; {{ preview.duplicate.length }} duplicate &middot; {{ preview.malformed.length }} malformed</p>
-      @if (preview.valid.length) { <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="importValid()"><app-icon name="upload" /> Import {{ preview.valid.length }} student number(s)</button> }
+      <p>{{ preview.totalRows }} rows &middot; {{ preview.valid.length }} valid &middot; {{ preview.duplicate.length }} duplicate &middot; {{ preview.malformed.length }} invalid</p>
+      @if (preview.valid.length) { <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="importValid()"><app-icon name="upload" /> Import {{ preview.valid.length }} students</button> }
     </div>
     <div class="table-wrap"><table class="data-table preview-table">
-      <thead><tr><th>Row</th><th>Student number</th><th>Result</th></tr></thead>
+      <thead><tr><th>Row</th><th>Student ID</th><th>Name</th><th>Result</th></tr></thead>
       <tbody>
-        @for (row of preview.valid; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber }}</td><td><span class="badge badge-success">Valid</span></td></tr> }
-        @for (row of preview.duplicate; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber }}</td><td><span class="badge badge-muted">Duplicate</span></td></tr> }
-        @for (row of preview.malformed; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber || '--' }}</td><td><span class="badge badge-danger">Malformed</span></td></tr> }
+        @for (row of preview.valid; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber }}</td><td>{{ row.firstName }} {{ row.middleName }} {{ row.lastName }}</td><td><span class="badge badge-success">Valid</span></td></tr> }
+        @for (row of preview.duplicate; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber }}</td><td>{{ row.firstName }} {{ row.lastName }}</td><td>Duplicate</td></tr> }
+        @for (row of preview.malformed; track row.rowNumber) { <tr><td>{{ row.rowNumber }}</td><td>{{ row.studentNumber || '--' }}</td><td>{{ row.firstName }} {{ row.lastName }}</td><td class="field-error">{{ row.error || 'Invalid record' }}</td></tr> }
       </tbody>
     </table></div>
   }
 </section>
-
-<section aria-label="Saved student numbers">
-  <div class="list-heading"><h2>Student numbers <span class="badge badge-muted">{{ entries().length }}</span></h2>
+}
+<section aria-label="Students">
+  <div class="list-heading"><h2>Students <span class="badge badge-muted">{{ entries().length }}</span></h2>
     <button class="btn btn-icon" type="button" aria-label="Refresh master list" title="Refresh master list" [disabled]="loading()" (click)="refresh()"><app-icon name="refresh" /></button>
   </div>
   <div class="filters">
-    <input type="search" aria-label="Search student numbers" placeholder="Search student number" [value]="search()" (input)="search.set($any($event.target).value)" />
-    <select aria-label="Registration status" [value]="status()" (change)="status.set($any($event.target).value)"><option value="">All statuses</option><option value="registered">Registered</option><option value="pending">Awaiting registration</option></select>
+    <input type="search" aria-label="Search students" placeholder="Search Student ID or name" [value]="search()" (input)="search.set($any($event.target).value)" />
+    <select aria-label="Student eligibility" [value]="status()" (change)="status.set($any($event.target).value)"><option value="">All statuses</option><option value="active">Eligible</option><option value="inactive">Inactive</option></select>
   </div>
-  @if (loadError()) { <div class="banner-error" role="alert">{{ loadError() }} <button class="btn btn-sm" type="button" (click)="refresh()">Retry</button></div> }
+  @if (loadError()) { <div class="banner-error" role="alert">{{ loadError() }}</div> }
   @if (loading()) { <p class="loading-row">Loading...</p> }
   @else {
     <div class="table-wrap"><table class="data-table masterlist-table">
-      <thead><tr><th>Student number</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+      <thead><tr><th>Student ID</th><th>First name</th><th>Middle name</th><th>Last name</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
       <tbody>
         @for (entry of visibleEntries(); track entry.id) {
-          <tr><td>{{ entry.studentNumber }}</td><td><span class="badge" [class.badge-success]="entry.isRegistered" [class.badge-muted]="!entry.isRegistered">{{ entry.isRegistered ? 'Registered' : 'Awaiting registration' }}</span></td>
-            <td class="cell-actions"><button class="btn btn-icon btn-danger" type="button" [attr.aria-label]="'Remove student number ' + entry.studentNumber" [title]="'Remove student number ' + entry.studentNumber" [disabled]="removingId() !== null" (click)="remove(entry)"><app-icon name="trash" /></button></td>
+          <tr><td>{{ entry.studentNumber }}</td><td>{{ entry.firstName }}</td><td>{{ entry.middleName || '--' }}</td><td>{{ entry.lastName }}</td>
+            <td><span class="badge" [class.badge-success]="entry.isActive" [class.badge-muted]="!entry.isActive">{{ entry.isActive ? 'Eligible' : 'Inactive' }}</span></td>
+            <td class="cell-actions">@if (editable()) {
+              <button class="btn btn-icon" type="button" [attr.aria-label]="'Edit ' + entry.studentNumber" title="Edit student" (click)="open(entry)"><app-icon name="edit" /></button>
+              @if (entry.isActive) { <button class="btn btn-icon btn-danger" type="button" [attr.aria-label]="'Deactivate ' + entry.studentNumber" title="Deactivate student" [disabled]="removingId() !== null" (click)="remove(entry)"><app-icon name="trash" /></button> }
+            }</td>
           </tr>
-        } @empty { <tr><td colspan="3" class="empty-state">{{ entries().length ? 'No matching student numbers.' : 'No student numbers uploaded yet.' }}</td></tr> }
+        } @empty { <tr><td colspan="6" class="empty-state">No matching students.</td></tr> }
       </tbody>
     </table></div>
   }
 </section>
+<app-modal [open]="modal()" [title]="editing() ? 'Edit student' : 'Add student'" (closed)="modal.set(false)">
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="form-field"><label for="student-id">Student ID</label><input id="student-id" formControlName="studentNumber" [readOnly]="!!editing()" maxlength="30" /></div>
+    <div class="form-field"><label for="first-name">First name</label><input id="first-name" formControlName="firstName" maxlength="100" /></div>
+    <div class="form-field"><label for="middle-name">Middle name</label><input id="middle-name" formControlName="middleName" maxlength="100" /></div>
+    <div class="form-field"><label for="last-name">Last name</label><input id="last-name" formControlName="lastName" maxlength="100" /></div>
+    @if (form.invalid && form.touched) { <p class="field-error">Student ID, first name and last name are required.</p> }
+    @if (saveError()) { <div class="banner-error" role="alert">{{ saveError() }}</div> }
+    <div class="form-actions"><button class="btn" type="button" [disabled]="saving()" (click)="modal.set(false)">Cancel</button>
+      <button class="btn btn-primary" type="submit" [disabled]="saving()"><app-icon name="check" /> {{ saving() ? 'Saving...' : 'Save student' }}</button></div>
+  </form>
+</app-modal>

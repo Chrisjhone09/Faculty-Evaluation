@@ -2,7 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, catchError, combineLatest, of, startWith, switchMap, tap } from 'rxjs';
+import { Subject, catchError, combineLatest, forkJoin, of, startWith, switchMap, tap } from 'rxjs';
 import { ChartConfiguration } from 'chart.js';
 import { GuidanceAnalyticsDto, GuidanceFacultyPerformanceRowDto } from '../../../core/models/guidance.models';
 import { DepartmentDto } from '../../../core/models/admin.models';
@@ -68,11 +68,11 @@ export class GuidanceDashboard implements OnInit {
     options: { plugins: { legend: { display: false } }, scales: AXES },
   }));
   protected readonly scoreChart = computed<ChartConfiguration>(() => {
-    const rows = this.analytics()?.departments.filter(d => d.averageRating !== null) ?? [];
+    const rows = this.analytics()?.departments.filter(d => d.weightedScore !== null) ?? [];
     return { type: 'bar', data: { labels: rows.map(d => d.name),
-      datasets: [{ label: 'Average / 5', data: rows.map(d => d.averageRating), backgroundColor: COLORS[1], borderRadius: 4, maxBarThickness: 32 }] },
+      datasets: [{ label: 'Weighted score / 100', data: rows.map(d => d.weightedScore), backgroundColor: COLORS[1], borderRadius: 4, maxBarThickness: 32 }] },
       options: { indexAxis: 'y', plugins: { legend: { display: false } },
-        scales: { x: { beginAtZero: true, max: 5, grid: { color: '#eef0f2' } }, y: { grid: { display: false } } } } };
+        scales: { x: { beginAtZero: true, max: 100, grid: { color: '#eef0f2' } }, y: { grid: { display: false } } } } };
   });
   protected readonly hasScores = computed(() => this.analytics()?.departments.some(d => d.averageRating !== null));
   protected readonly hasSubmissions = computed(() => (this.analytics()?.submitted ?? 0) > 0);
@@ -81,21 +81,22 @@ export class GuidanceDashboard implements OnInit {
     this.departmentService.list().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: rows => this.departments.set(rows),
     });
-    this.reporting.getFacultyPerformance().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: rows => this.faculty.set(rows),
-    });
     combineLatest([this.route.queryParamMap, this.refreshTrigger.pipe(startWith(undefined))]).pipe(
       tap(([params]) => {
         this.selectedDepartment.set(params.get('department') ?? '');
         this.selectedPeriod.set(params.get('period') ?? '');
         this.loading.set(true); this.error.set(null);
       }),
-      switchMap(() => this.reporting.getAnalytics(this.selectedPeriod(), this.selectedDepartment()).pipe(
+      switchMap(() => forkJoin({
+        analytics: this.reporting.getAnalytics(this.selectedPeriod(), this.selectedDepartment()),
+        faculty: this.reporting.getFacultyPerformance(this.selectedPeriod()),
+      }).pipe(
         catchError(() => { this.error.set('Analytics could not be loaded. Try refreshing.'); return of(null); }),
       )),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(data => {
-      this.analytics.set(data);
+      this.analytics.set(data?.analytics ?? null);
+      this.faculty.set(data?.faculty ?? []);
       this.loading.set(false);
       if (data) this.updatedAt.set(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     });
@@ -109,8 +110,8 @@ export class GuidanceDashboard implements OnInit {
     const a = this.analytics();
     if (!a) return;
     const rows = [
-      ['Period', 'Department', 'Faculty', 'Submitted', 'Current eligible memberships', 'Completed', 'Average / 5', 'Rapid appraisal / 10'],
-      ...a.departments.map(d => [a.periodName, d.name, d.facultyCount, d.submitted, d.eligible, d.completed, d.averageRating ?? '', d.rapidAppraisalAverageRating ?? '']),
+      ['Period', 'Department', 'Faculty', 'Submitted', 'Eligible student-faculty pairs', 'Completed', 'Average / 5', 'Rapid appraisal / 10', 'Weighted / 100'],
+      ...a.departments.map(d => [a.periodName, d.name, d.facultyCount, d.submitted, d.eligible, d.completed, d.averageRating ?? '', d.rapidAppraisalAverageRating ?? '', d.weightedScore ?? '']),
     ];
     const csv = rows.map(row => row.map(value => {
       let text = String(value);
