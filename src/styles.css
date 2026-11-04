@@ -1668,6 +1668,7 @@ table.data-table.is-dense td { padding: var(--space-2) var(--space-3); font-size
 .text-xs { font-size: var(--text-xs); }
 .text-sm { font-size: var(--text-sm); }
 .text-lg { font-size: var(--text-lg); }
+.summary-text strong { color: var(--color-primary-text-strong); font-weight: var(--weight-bold); }
 
 .font-medium { font-weight: var(--weight-medium); }
 .font-semibold { font-weight: var(--weight-semibold); }

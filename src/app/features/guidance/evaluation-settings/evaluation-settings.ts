@@ -3,25 +3,16 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { API_BASE_URL } from '../../../core/config/api-config';
 import { Icon } from '../../../shared/components/icon/icon';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
 
-interface Settings { minimumRespondents: number; minimumCommentRespondents: number; }
+interface Settings {
+  minimumRespondents: number; minimumCommentRespondents: number;
+  respondentThresholdMode: string; respondentPercentage: number;
+  commentThresholdMode: string; commentPercentage: number;
+  neutralScoreMinimum: number; positiveScoreMinimum: number; applyToActivePeriod: boolean;
+}
 @Component({
-  selector: 'app-evaluation-settings', imports: [ReactiveFormsModule, Icon, PageHeader],
-  template: `<app-page-header title="Evaluation Settings" />
-    @if (loading()) { <p class="loading-row">Loading...</p> }
-    @else { <form [formGroup]="form" (ngSubmit)="save()" class="settings-form">
-      <h2>Reliability thresholds</h2>
-      <div class="form-field"><label for="minimum-respondents">Minimum respondents</label>
-        <input id="minimum-respondents" type="number" min="1" max="10000" formControlName="minimumRespondents" /></div>
-      <div class="form-field"><label for="minimum-comments">Minimum written-feedback contributors</label>
-        <input id="minimum-comments" type="number" min="1" max="10000" formControlName="minimumCommentRespondents" /></div>
-      @if (form.invalid && form.touched) { <p class="field-error">Enter whole numbers from 1 to 10,000.</p> }
-      @if (error()) { <div class="banner-error" role="alert">{{ error() }}</div> }
-      @if (saved()) { <div class="banner-success" role="status">Saved for future evaluation periods.</div> }
-      <div class="form-actions"><button class="btn btn-primary" type="submit" [disabled]="busy()"><app-icon name="check" /> {{ busy() ? 'Saving...' : 'Save settings' }}</button></div>
-    </form> }`,
-  styles: ['.settings-form { max-width: 520px; } h2 { font-size: 20px; }'],
+  selector: 'app-evaluation-settings', imports: [ReactiveFormsModule, Icon],
+  templateUrl: './evaluation-settings.html', styleUrl: './evaluation-settings.css',
 })
 export class EvaluationSettings implements OnInit {
   private readonly http = inject(HttpClient);
@@ -29,21 +20,37 @@ export class EvaluationSettings implements OnInit {
   protected readonly form = inject(FormBuilder).nonNullable.group({
     minimumRespondents: [5, [Validators.required, Validators.min(1), Validators.max(10000), Validators.pattern(/^\d+$/)]],
     minimumCommentRespondents: [5, [Validators.required, Validators.min(1), Validators.max(10000), Validators.pattern(/^\d+$/)]],
+    respondentThresholdMode: ['Count', Validators.required],
+    respondentPercentage: [50, [Validators.required, Validators.min(0.01), Validators.max(100)]],
+    commentThresholdMode: ['Count', Validators.required],
+    commentPercentage: [30, [Validators.required, Validators.min(0.01), Validators.max(100)]],
+    neutralScoreMinimum: [50, [Validators.required, Validators.min(0.01), Validators.max(99.99)]],
+    positiveScoreMinimum: [75, [Validators.required, Validators.min(0.01), Validators.max(100)]],
+    applyToActivePeriod: [true],
   });
   protected readonly loading = signal(true);
+  protected readonly loadFailed = signal(false);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
-  protected readonly saved = signal(false);
+  protected readonly saved = signal('');
+  protected requiredExample(population: number, percentage: number): number { return Math.max(1, Math.ceil(population * percentage / 100)); }
   ngOnInit(): void { this.http.get<Settings>(this.url).subscribe({
-    next: s => { this.form.setValue(s); this.loading.set(false); },
-    error: () => { this.loading.set(false); this.error.set('Could not load settings.'); },
+    next: s => { this.form.patchValue({ ...s, applyToActivePeriod: true }); this.loading.set(false); },
+    error: () => { this.loading.set(false); this.loadFailed.set(true); this.error.set('Could not load settings. Refresh to try again.'); },
   }); }
   protected save(): void {
-    if (this.form.invalid || this.busy()) { this.form.markAllAsTouched(); return; }
-    this.busy.set(true); this.error.set(''); this.saved.set(false);
-    this.http.put<Settings>(this.url, this.form.getRawValue()).subscribe({
-      next: () => { this.busy.set(false); this.saved.set(true); },
-      error: (e: HttpErrorResponse) => { this.busy.set(false); this.error.set(e.error?.detail ?? 'Could not save settings.'); },
+    this.error.set(''); this.saved.set('');
+    if (this.form.invalid || this.busy() || this.loadFailed()) { this.form.markAllAsTouched(); return; }
+    const request = this.form.getRawValue();
+    if (request.neutralScoreMinimum >= request.positiveScoreMinimum) {
+      this.error.set('Neutral minimum must be lower than Positive minimum.'); return;
+    }
+    this.busy.set(true);
+    this.http.put<Settings>(this.url, request).subscribe({
+      next: () => { this.busy.set(false); this.saved.set(request.applyToActivePeriod
+        ? 'Saved for the active period and future periods. Closed periods keep their original rules.'
+        : 'Saved for future periods. The active period keeps its current rules.'); },
+      error: (e: HttpErrorResponse) => { this.busy.set(false); this.error.set(Object.values(e.error?.errors ?? {}).flat().join(' ') || e.error?.detail || e.error?.Detail || 'Could not save settings.'); },
     });
   }
 }

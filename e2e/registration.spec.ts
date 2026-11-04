@@ -87,8 +87,12 @@ test('combined student evaluation presents descending ratings and optional comme
   await expect(page.getByRole('heading', { name: 'Alex Reyes', exact: true })).toBeVisible();
   const inventory = page.locator('input[name="q1"]');
   await expect(inventory).toHaveCount(5);
-  expect(await inventory.evaluateAll(inputs => inputs.map(input => input.closest('label')!.textContent!.trim()))).toEqual(['5', '4', '3', '2', '1']);
-  await inventory.first().check(); await page.locator('input[name="q2"]').first().check();
+  expect(await page.getByText('↕ Reversed statement', { exact: true })).toBeVisible();
+  expect(await inventory.evaluateAll(inputs => inputs.map(input => input.closest('label')!.textContent!.replace(/\s+/g, '').trim()))).toEqual([
+    '5Stronglydisagree', '4Disagree', '3Neutral', '2Agree', '1Stronglyagree',
+  ]);
+  await page.locator('label.rating-option').filter({ has: page.locator('input[name="q1"]') }).first().click();
+  await page.locator('label.rating-option').filter({ has: page.locator('input[name="q2"]') }).first().click();
   await page.getByRole('button', { name: 'Submit evaluation', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Thank you', exact: true })).toBeVisible();
   expect(submissions).toBe(1); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

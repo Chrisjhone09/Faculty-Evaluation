@@ -17,6 +17,20 @@
     </select>
   </div>
   <div class="form-field">
+    <label for="roster-term">Academic term</label>
+    <select id="roster-term" [value]="termFilter()" (change)="termFilter.set($any($event.target).value)">
+      <option value="">All terms</option>
+      @for (term of terms(); track term) { <option [value]="term">{{ term }}</option> }
+    </select>
+  </div>
+  <div class="form-field">
+    <label for="roster-instructor">Instructor</label>
+    <select id="roster-instructor" [value]="instructorFilter()" (change)="instructorFilter.set($any($event.target).value)">
+      <option value="">All instructors</option>
+      @for (instructor of offeringInstructors(); track instructor[0]) { <option [value]="instructor[0]">{{ instructor[1] }}</option> }
+    </select>
+  </div>
+  <div class="form-field">
     <label for="roster-status">Status</label>
     <select id="roster-status" [value]="status()" (change)="status.set($any($event.target).value)">
       <option value="Active">Active</option>
@@ -39,11 +53,12 @@
     <table class="data-table">
       <thead><tr><th>Subject</th><th>Department</th><th>Instructor</th><th>Enrolled</th><th>Status</th><th><span class="sr-only">Roster actions</span></th></tr></thead>
       <tbody>
-        @for (offering of visibleOfferings(); track offering.id) {
+        @for (offering of table.rows(); track offering.id) {
           <tr>
             <td><strong>{{ offering.subjectCode }} - {{ offering.subjectTitle }}</strong><span class="class-meta">{{ offering.sectionCode }} &middot; {{ offering.term }}</span></td>
             <td data-label="Department">{{ offering.departmentName }}</td>
             <td data-label="Instructor"><div class="instructor-assignment">
+              @if (offering.instructorId) { <app-profile-avatar kind="instructors" [profileId]="offering.instructorId" [name]="offering.instructorName ?? 'Instructor'" [editable]="true" /> }
               <span>{{ offering.instructorName ?? 'Unassigned' }}</span>
               @if (offering.status === 'Active') {
                 <button class="btn btn-icon" type="button" [attr.aria-label]="'Assign instructor for ' + offering.subjectCode + ' ' + offering.sectionCode" title="Assign instructor" [disabled]="catalogLoading() || !!catalogError()" (click)="openInstructor(offering)"><app-icon name="edit" /></button>
@@ -66,6 +81,7 @@
       </tbody>
     </table>
   </div>
+  <app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="roster" itemLabelPlural="rosters" (previous)="table.previousPage()" (next)="table.nextPage()" />
 }
 
 <app-modal [open]="creating()" title="Assign instructor to subject" (closed)="!saving() && creating.set(false)">
@@ -99,9 +115,30 @@
         @if (assignmentForm.controls.instructorId.touched && assignmentForm.controls.instructorId.invalid) { <span class="field-error">Select an instructor.</span> }
       </div>
       <div class="form-field">
-        <label for="assignment-term">Term</label>
-        <input id="assignment-term" type="text" formControlName="term" maxlength="100" />
-        @if (assignmentForm.controls.term.touched && assignmentForm.controls.term.invalid) { <span class="field-error">Enter a term (up to 100 characters).</span> }
+        <fieldset class="term-picker">
+          <legend>Academic term</legend>
+          <div class="term-year-row">
+            <div class="form-field">
+              <label for="assignment-year-start">Start year</label>
+              <select id="assignment-year-start" formControlName="academicYearStart" (change)="validateAcademicYears()">
+                @for (year of academicYearOptions; track year) { <option [ngValue]="year">{{ year }}</option> }
+              </select>
+            </div>
+            <span class="term-separator" aria-hidden="true">to</span>
+            <div class="form-field">
+              <label for="assignment-year-end">End year</label>
+              <select id="assignment-year-end" formControlName="academicYearEnd" (change)="validateAcademicYears()">
+                @for (year of academicYearOptions; track year) { <option [ngValue]="year">{{ year }}</option> }
+              </select>
+            </div>
+          </div>
+          @if (academicYearError()) { <span class="field-error" role="alert">{{ academicYearError() }}</span> }
+          <div class="semester-options" aria-label="Semester">
+            <label><input type="radio" formControlName="semester" value="1st" /> 1st Semester</label>
+            <label><input type="radio" formControlName="semester" value="2nd" /> 2nd Semester</label>
+          </div>
+          <span class="hint">Enter the calendar years only. The range must be exactly one year; the term will be saved as AY YYYY-YYYY [semester] Semester.</span>
+        </fieldset>
       </div>
     </fieldset>
     @if (saveError()) { <div class="banner-error" role="alert">{{ saveError() }}</div> }

@@ -2,6 +2,9 @@ import { Signal, WritableSignal, computed, signal } from '@angular/core';
 
 export type SortDirection = 'asc' | 'desc';
 
+/** Hard UI limit for every paged collection in the Guidance workspace. */
+export const MAX_PAGE_SIZE = 50;
+
 export interface SortState<TKey extends string = string> {
   key: TKey;
   direction: SortDirection;
@@ -73,7 +76,7 @@ export function createTableState<T, TKey extends string = string>(
   const search = signal('');
   const sort = signal<SortState<TKey> | null>(options.initialSort ?? null);
   const page = signal(1);
-  const pageSize = signal(options.pageSize ?? 15);
+  const pageSize = signal(Math.min(MAX_PAGE_SIZE, Math.max(1, options.pageSize ?? MAX_PAGE_SIZE)));
 
   const filtered = computed(() => {
     let rows = source();

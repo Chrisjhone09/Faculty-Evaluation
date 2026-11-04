@@ -21,6 +21,7 @@ export class SentimentValidationService {
   list(periodId?: string) { return this.http.get<ValidationBatch[]>(this.url, { params: periodId ? { periodId } : {} }); }
   create(evaluationPeriodId: string, name: string, sampleSize: number) { return this.http.post<ValidationDetail>(this.url, { evaluationPeriodId, name, sampleSize }); }
   get(id: string) { return this.http.get<ValidationDetail>(`${this.url}/${id}`); }
+  delete(id: string) { return this.http.delete<void>(`${this.url}/${id}`); }
   save(id: string, labels: { itemId: string; sentiment: Sentiment | null; isExcluded: boolean }[]) { return this.http.put<ValidationDetail>(`${this.url}/${id}/labels`, labels); }
   complete(id: string) { return this.http.post<ValidationDetail>(`${this.url}/${id}/complete`, {}); }
 }

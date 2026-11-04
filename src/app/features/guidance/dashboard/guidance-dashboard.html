@@ -69,7 +69,7 @@
     <div class="attention-strip">
       <span class="attention-label"><app-icon name="inbox" /> Awaiting review</span>
       @if (a.pendingAccounts > 0) {
-        <a routerLink="/guidance/users"><strong>{{ a.pendingAccounts }}</strong> student accounts <span class="text-xs">(system-wide)</span><app-icon name="chevron-right" size="sm" /></a>
+        <a routerLink="/guidance/student-masterlist"><strong>{{ a.pendingAccounts }}</strong> student accounts <span class="text-xs">(system-wide)</span><app-icon name="chevron-right" size="sm" /></a>
       }
     </div>
   }

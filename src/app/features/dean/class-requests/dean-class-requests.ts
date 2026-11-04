@@ -4,10 +4,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClassRequestDto, ClassRequestStatus } from '../../../core/models/dean.models';
 import { Modal } from '../../../shared/components/modal/modal';
 import { DeanClassRequestsService } from '../services/dean-class-requests.service';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 
 @Component({
   selector: 'app-dean-class-requests',
-  imports: [ReactiveFormsModule, Modal],
+  imports: [ReactiveFormsModule, Modal, Pagination],
   templateUrl: './dean-class-requests.html',
 })
 export class DeanClassRequests implements OnInit {
@@ -23,6 +25,8 @@ export class DeanClassRequests implements OnInit {
 
   protected readonly pending = computed(() => this.requests().filter((r) => r.status === ClassRequestStatus.Pending));
   protected readonly reviewed = computed(() => this.requests().filter((r) => r.status !== ClassRequestStatus.Pending));
+  protected readonly pendingTable = createTableState(this.pending, { searchFields: r => [r.instructorName, r.subjectCode, r.subjectTitle, r.sectionCode, r.term, r.departmentName], initialSort: { key: 'subjectCode', direction: 'asc' }, pageSize: 50 });
+  protected readonly reviewedTable = createTableState(this.reviewed, { searchFields: r => [r.instructorName, r.subjectCode, r.subjectTitle, r.sectionCode, r.term, r.departmentName, r.status], initialSort: { key: 'subjectCode', direction: 'asc' }, pageSize: 50 });
 
   protected readonly rejectingRequest = signal<ClassRequestDto | null>(null);
   protected readonly rejectSubmitting = signal(false);

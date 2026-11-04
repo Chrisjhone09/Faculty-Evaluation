@@ -26,7 +26,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (offering of offerings(); track offering.id) {
+        @for (offering of table.rows(); track offering.id) {
           <tr>
             <td>{{ offering.subjectCode }} - {{ offering.subjectTitle }}</td>
             <td>{{ offering.sectionCode }}</td>
@@ -39,5 +39,6 @@
         }
       </tbody>
     </table>
+    <app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="class" itemLabelPlural="classes" (previous)="table.previousPage()" (next)="table.nextPage()" />
   </div>
 }

@@ -79,6 +79,34 @@ async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
 
+test('instructor PDF downloads all feedback and saved summary without an AI request', async ({ page }, info) => {
+  await setup(page);
+  let aiRequests = 0;
+  await page.route('**/api/guidance/faculty-performance/i1/summary', async route => {
+    aiRequests++;
+    await route.fulfill({ status: 503, json: { detail: 'Export must use the saved summary.' } });
+  });
+  await page.route('**/api/guidance/faculty-performance/i1/detail*', async route => {
+    await route.fulfill({ json: {
+      ...detail,
+      analytics: { ...analytics, neutralScoreMinimum: 50, positiveScoreMinimum: 75, respondentThresholdMode: 'Count', commentThresholdMode: 'Count' },
+      savedSummary: { summary: '**Overall interpretation**\n**Saved PDF interpretation.** Results require Guidance review.', generatedAtUtc: '2026-11-04T00:00:00Z', evaluationCount: 10, respondentCount: 10 },
+      rapidAppraisalComments: Array.from({ length: 55 }, (_, i) => ({ commentText: `Anonymous feedback ${i + 1}.`, ratingValue: 8, sentiment: 'Positive', isFlaggedNegative: false })),
+    } });
+  });
+  await page.goto('/guidance/faculty/i1?period=p1');
+  await page.getByRole('button', { name: 'Close summary', exact: true }).click();
+  const downloadEvent = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download PDF report', exact: true }).click();
+  const download = await downloadEvent;
+  expect(download.suggestedFilename()).toContain('Alex-Reyes');
+  expect(download.suggestedFilename()).toMatch(/\.pdf$/);
+  expect(await download.failure()).toBeNull();
+  await download.saveAs(info.outputPath('instructor-report.pdf'));
+  expect(aiRequests).toBe(0);
+  await noOverflow(page);
+});
+
 test('Guidance labels blindly, saves progress, and reveals versioned validation metrics', async ({ page }, info) => {
   await setup(page);
   let created = false; let completed = false; let saveCalls = 0; let saveAttempts = 0;

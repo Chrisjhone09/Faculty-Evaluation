@@ -103,6 +103,9 @@
                 <div class="user-name">{{ user.fullName }}</div>
                 <div class="user-email truncate">{{ user.email }}</div>
               </div>
+              @if (user.roles.includes('Guidance')) {
+                <a routerLink="/guidance/settings" [queryParams]="{tab: 'account'}" class="user-dropdown-item" role="menuitem"><app-icon name="users" size="sm" /> Account settings</a>
+              }
               <button type="button" class="user-dropdown-item" role="menuitem" (click)="logout()">
                 <app-icon name="logout" size="sm" />
                 Sign out

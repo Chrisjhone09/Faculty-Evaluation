@@ -35,10 +35,10 @@
             <td>{{ row.evaluationsSubmittedCount }}</td>
             <td>
               @if (row.averageRating !== null) {
-                {{ row.averageRating }} / 5
+                {{ row.averageRating | number:'1.2-2' }} / 5
               }
               @if (row.rapidAppraisalAverageRating !== null) {
-                <div class="hint" style="color: var(--color-text-muted);">{{ row.rapidAppraisalAverageRating }} / 10 rapid appraisal</div>
+                <div class="hint" style="color: var(--color-text-muted);">{{ row.rapidAppraisalAverageRating | number:'1.2-2' }} / 10 rapid appraisal</div>
               }
             </td>
             <td class="hint" style="color: var(--color-text-muted);">{{ row.reason }}</td>

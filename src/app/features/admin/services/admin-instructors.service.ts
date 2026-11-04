@@ -24,4 +24,10 @@ export class AdminInstructorsService {
   update(id: string, request: UpdateInstructorRequest): Observable<InstructorDto> {
     return this.http.put<InstructorDto>(`${this.baseUrl}/${id}`, request);
   }
+
+  uploadPhoto(id: string, file: File): Observable<void> {
+    const body = new FormData();
+    body.append('file', file, file.name);
+    return this.http.post<void>(`${API_BASE_URL}/profile-photos/instructors/${id}`, body);
+  }
 }

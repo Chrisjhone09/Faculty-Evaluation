@@ -45,7 +45,7 @@ export class InstructorClassRequests implements OnInit {
     instructorId: [''],
     subjectId: ['', [Validators.required]],
     sectionId: ['', [Validators.required]],
-    term: ['', [Validators.required, Validators.maxLength(100)]],
+    term: ['', [Validators.required, Validators.pattern(/^AY\s+\d{4}-\d{4}\s+(?:1st|2nd)\s*Semester$/i), Validators.maxLength(100)]],
     proposedStudentNumbersRaw: [''],
   });
 

@@ -247,3 +247,59 @@ chunk-7ZZQGGXF.js   | student-routes               |  2.96 kB |
 Application bundle generation complete. [1.049 seconds] - 2026-11-03T06:35:13.723Z
 
 Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names              |  Raw size
+main.js             | main               |   6.55 kB | 
+
+Lazy chunk files    | Names              |  Raw size
+chunk-WGH5SGNS.js   | admin-academics    | 111.00 kB | 
+chunk-2Q3CRUBE.js   | guidance-dashboard |  65.78 kB | 
+chunk-TMQ46T7G.js   | guidance-routes    |   6.18 kB | 
+chunk-MP46BWWX.js   | -                  |   1.39 kB | 
+
+Application bundle generation complete. [0.406 seconds] - 2026-11-03T06:41:19.360Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names            |  Raw size
+main.js             | main             |   6.55 kB | 
+
+Lazy chunk files    | Names            |  Raw size
+chunk-V3QHEVX2.js   | admin-academics  | 116.96 kB | 
+chunk-5R6QB5QB.js   | guidance-rosters |  54.86 kB | 
+chunk-HBEMMIO3.js   | guidance-routes  |   6.18 kB | 
+chunk-4WBRIWJL.js   | -                |   3.55 kB | 
+
+Application bundle generation complete. [0.472 seconds] - 2026-11-03T06:41:20.636Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names            |  Raw size
+main.js             | main             |   6.55 kB | 
+
+Lazy chunk files    | Names            |  Raw size
+chunk-HSEBU3EY.js   | admin-academics  | 122.83 kB | 
+chunk-33IZLW2A.js   | guidance-rosters |  54.86 kB | 
+chunk-K5CHWAUX.js   | guidance-routes  |   6.18 kB | 
+chunk-JCQAPDVI.js   | -                |   3.63 kB | 
+
+Application bundle generation complete. [0.457 seconds] - 2026-11-03T06:41:21.829Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names            |  Raw size
+main.js             | main             |   6.55 kB | 
+
+Lazy chunk files    | Names            |  Raw size
+chunk-VOIBF3BL.js   | admin-academics  | 128.84 kB | 
+chunk-VYMXH7KV.js   | guidance-rosters |  54.86 kB | 
+chunk-2GDXSEAH.js   | guidance-routes  |   6.18 kB | 
+chunk-WASQU77E.js   | -                |   3.70 kB | 
+
+Application bundle generation complete. [0.366 seconds] - 2026-11-03T06:41:22.979Z
+
+Page reload sent to client(s).

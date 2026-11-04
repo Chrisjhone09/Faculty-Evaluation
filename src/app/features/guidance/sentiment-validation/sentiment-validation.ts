@@ -5,17 +5,24 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Icon } from '../../../shared/components/icon/icon';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { ReportPeriod } from '../shared/report-period';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 import { Sentiment, SentimentValidationService, ValidationBatch, ValidationDetail } from './sentiment-validation.service';
 
 @Component({
   selector: 'app-sentiment-validation',
-  imports: [DatePipe, PercentPipe, ReactiveFormsModule, Icon, PageHeader, ReportPeriod],
+  imports: [DatePipe, PercentPipe, ReactiveFormsModule, Icon, PageHeader, ReportPeriod, Pagination],
   templateUrl: './sentiment-validation.html', styleUrl: './sentiment-validation.css',
 })
 export class SentimentValidation {
   private readonly service = inject(SentimentValidationService);
   protected readonly periodId = signal<string | undefined>(undefined);
   protected readonly batches = signal<ValidationBatch[]>([]);
+  protected readonly batchTable = createTableState(this.batches, {
+    searchFields: batch => [batch.name, batch.periodName],
+    initialSort: { key: 'createdAtUtc', direction: 'desc' },
+    pageSize: 50,
+  });
   protected readonly detail = signal<ValidationDetail | null>(null);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
@@ -52,6 +59,17 @@ export class SentimentValidation {
     if (this.busy()) return;
     this.busy.set(true); this.error.set(''); this.message.set('');
     this.service.get(id).subscribe({ next: d => { this.show(d); this.busy.set(false); }, error: e => this.fail(e) });
+  }
+  protected deleteBatch(batch: ValidationBatch): void {
+    if (this.busy() || !window.confirm(`Delete the validation batch “${batch.name}”? Its saved labels and metrics will be removed.`)) return;
+    this.busy.set(true); this.error.set(''); this.message.set('');
+    this.service.delete(batch.id).subscribe({
+      next: () => {
+        this.batches.update(rows => rows.filter(row => row.id !== batch.id));
+        this.busy.set(false); this.message.set('Validation batch deleted. Its comments can be reviewed in a future batch.');
+      },
+      error: e => this.fail(e),
+    });
   }
   private show(d: ValidationDetail): void {
     this.detail.set(d); this.page.set(0); this.dirty.set(false);

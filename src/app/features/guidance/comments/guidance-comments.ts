@@ -7,6 +7,8 @@ import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { QuestionType } from '../../../core/models/evaluation.models';
 import { GuidanceCommentDto, GuidanceFacultyPerformanceRowDto } from '../../../core/models/guidance.models';
 import { GuidanceReportingService } from '../services/guidance-reporting.service';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 
 /**
  * Guidance can browse written comments at any respondent count.
@@ -14,7 +16,7 @@ import { GuidanceReportingService } from '../services/guidance-reporting.service
  */
 @Component({
   selector: 'app-guidance-comments',
-  imports: [Icon, PageHeader, ReportPeriod],
+  imports: [Icon, PageHeader, ReportPeriod, Pagination],
   templateUrl: './guidance-comments.html',
   styleUrl: './guidance-comments.css',
 })
@@ -28,6 +30,11 @@ export class GuidanceComments implements OnInit {
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly comments = signal<GuidanceCommentDto[]>([]);
+  protected readonly table = createTableState(this.comments, {
+    searchFields: comment => [comment.instructorName, comment.departmentName, comment.questionText, comment.commentText],
+    initialSort: { key: 'instructorName', direction: 'asc' },
+    pageSize: 50,
+  });
   protected readonly filtersError = signal<string | null>(null);
 
   /** Indices of rows currently showing their original (unfiltered) text. */

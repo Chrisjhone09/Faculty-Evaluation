@@ -1,0 +1,50 @@
+<h2>Evaluation Settings</h2>
+<p class="intro">Set how much evidence is required and how numerical scores are interpreted.</p>
+@if (error()) { <div class="banner-error" role="alert">{{ error() }}</div> }
+@if (saved()) { <div class="banner-success" role="status">{{ saved() }}</div> }
+@if (loading()) { <p class="loading-row">Loading settings…</p> }
+@else {
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <div class="rules-grid">
+      <section class="settings-card">
+        <h3>Minimum respondents</h3><p>Required before faculty numerical results and overall sentiment can be reported.</p>
+        <label for="respondent-mode">Respondent threshold</label>
+        <select id="respondent-mode" formControlName="respondentThresholdMode"><option value="Count">Fixed number of students</option><option value="Percentage">Percentage of enrolled students</option></select>
+        @if (form.controls.respondentThresholdMode.value === 'Count') {
+          <label for="minimum-respondents">Minimum respondents</label><input id="minimum-respondents" type="number" min="1" max="10000" step="1" formControlName="minimumRespondents" />
+        } @else {
+          <label for="respondent-percentage">Enrolled students required (%)</label><input id="respondent-percentage" type="number" min="0.01" max="100" step="0.01" formControlName="respondentPercentage" />
+          <p class="example">Example: {{ form.controls.respondentPercentage.value }}% of 100 eligible students requires {{ requiredExample(100, form.controls.respondentPercentage.value) }} students, rounded up.</p>
+        }
+        <p class="hint">Population: unique eligible students assigned to the faculty member for that period, across all their subjects.</p>
+      </section>
+      <section class="settings-card">
+        <h3>Minimum written feedback</h3><p>Required before written feedback is assigned an overall Positive, Neutral, or Negative sentiment.</p>
+        <label for="comment-mode">Written-feedback threshold</label>
+        <select id="comment-mode" formControlName="commentThresholdMode"><option value="Count">Fixed number of contributors</option><option value="Percentage">Percentage of respondents</option></select>
+        @if (form.controls.commentThresholdMode.value === 'Count') {
+          <label for="minimum-comments">Minimum written-feedback contributors</label><input id="minimum-comments" type="number" min="1" max="10000" step="1" formControlName="minimumCommentRespondents" />
+        } @else {
+          <label for="comment-percentage">Respondents with classified feedback required (%)</label><input id="comment-percentage" type="number" min="0.01" max="100" step="0.01" formControlName="commentPercentage" />
+          <p class="example">Example: {{ form.controls.commentPercentage.value }}% of 50 respondents requires {{ requiredExample(50, form.controls.commentPercentage.value) }} written-feedback contributors.</p>
+        }
+        <p class="hint">Each student counts once, even with multiple comments. Only interpretable, classified feedback counts toward this threshold. Percentage counts round up and require at least one person. Individual comments remain available to Guidance.</p>
+      </section>
+    </div>
+    <section class="settings-card">
+      <h3>Numerical rating rubric</h3><p>Set the cutoffs on the weighted score. Inventory contributes up to 90 points; the raw rapid appraisal average (6–10) is added directly as the 10-point component.</p>
+      <div class="rules-grid">
+        <div><label for="neutral-minimum">Neutral starts at</label><input id="neutral-minimum" type="number" min="0.01" max="99.99" step="0.01" formControlName="neutralScoreMinimum" /></div>
+        <div><label for="positive-minimum">Positive starts at</label><input id="positive-minimum" type="number" min="0.01" max="100" step="0.01" formControlName="positiveScoreMinimum" /></div>
+      </div>
+      <div class="rubric-preview"><div><span>Negative</span><strong>0 to below {{ form.controls.neutralScoreMinimum.value }}</strong></div><div><span>Neutral</span><strong>{{ form.controls.neutralScoreMinimum.value }} to below {{ form.controls.positiveScoreMinimum.value }}</strong></div><div><span>Positive</span><strong>{{ form.controls.positiveScoreMinimum.value }} to 100</strong></div></div>
+      <p class="hint">Boundary values belong to the band starting at that value. These bands control numerical classifications, scale–sentiment matching, and low-score flags. Written sentiment is classified from the comment text.</p>
+    </section>
+    <section class="settings-card apply-card">
+      <label class="check-label"><input type="checkbox" formControlName="applyToActivePeriod" /> Apply these rules to the active evaluation period too</label>
+      <p class="hint">New periods receive these rules when activated. Closed periods retain their original rules. Changing active rules recalculates reports; previously saved AI summaries are marked for regeneration.</p>
+      @if (form.invalid && form.touched) { <p class="field-error">Use whole-number counts from 1–10,000, percentages above 0 up to 100, and score cutoffs with Neutral below Positive.</p> }
+      <button class="btn btn-primary" type="submit" [disabled]="busy() || loadFailed()"><app-icon name="check" /> {{ busy() ? 'Saving…' : 'Save evaluation settings' }}</button>
+    </section>
+  </form>
+}

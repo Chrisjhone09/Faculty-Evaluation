@@ -21,12 +21,11 @@ export class GuidanceShell {
     {
       label: 'Management',
       items: [
-        { label: 'Guidance Accounts', path: '/guidance/users', icon: 'users' },
         { label: 'Student Master List', path: '/guidance/student-masterlist', icon: 'clipboard' },
         { label: 'Academic Structure', path: '/guidance/academics', icon: 'building' },
         { label: 'Subjects & Rosters', path: '/guidance/rosters', icon: 'graduation' },
         { label: 'Evaluations', path: '/guidance/evaluations', icon: 'clipboard' },
-        { label: 'Evaluation Settings', path: '/guidance/settings', icon: 'chart' },
+        { label: 'Settings', path: '/guidance/settings', icon: 'chart' },
       ],
     },
   ];

@@ -30,7 +30,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (subject of subjects(); track subject.id) {
+        @for (subject of table.rows(); track subject.id) {
           <tr>
             <td>{{ subject.code }}</td>
             <td>{{ subject.title }}</td>
@@ -51,6 +51,7 @@
         }
       </tbody>
     </table>
+    <app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="subject" itemLabelPlural="subjects" (previous)="table.previousPage()" (next)="table.nextPage()" />
   </div>
 }
 

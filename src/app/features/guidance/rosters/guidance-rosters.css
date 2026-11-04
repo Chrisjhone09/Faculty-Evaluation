@@ -1,10 +1,19 @@
 :host { display: block; min-width: 0; }
-.roster-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); margin-bottom: var(--space-4); }
+.roster-filters { display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)); gap: var(--space-4); margin-bottom: var(--space-4); }
 .roster-filters .form-field { margin: 0; min-width: 0; }
 .class-meta { display: block; margin-top: var(--space-1); color: var(--color-text-muted); font-size: var(--text-sm); }
 .roster-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
 .instructor-assignment { display: flex; align-items: center; gap: var(--space-2); }
 fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.term-picker { padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.term-picker legend { padding: 0 var(--space-1); font-weight: 600; }
+.term-year-row { display: flex; align-items: end; gap: var(--space-3); flex-wrap: wrap; }
+.term-year-row .form-field { margin: 0; min-width: 140px; }
+.term-year-row select { width: 140px; }
+.term-separator { padding-bottom: var(--space-2); color: var(--color-text-secondary); }
+.semester-options { display: flex; gap: var(--space-5); flex-wrap: wrap; margin-top: var(--space-3); }
+.semester-options label { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; }
+.semester-options input[type="radio"] { width: 16px; height: 16px; margin: 0; }
 .modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
 @media (max-width: 900px) {
   .data-table, .data-table tbody { display: block; width: 100%; min-width: 0; }

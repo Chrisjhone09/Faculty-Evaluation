@@ -8,10 +8,12 @@ import { EvaluationPeriodDto, EvaluationPeriodStatus } from '../../../core/model
 import { Modal } from '../../../shared/components/modal/modal';
 import { AdminEvaluationFormsService } from '../services/admin-evaluation-forms.service';
 import { AdminEvaluationPeriodsService } from '../services/admin-evaluation-periods.service';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 
 @Component({
   selector: 'app-admin-evaluation-periods',
-  imports: [Icon, ReactiveFormsModule, Modal, DatePipe],
+  imports: [Icon, ReactiveFormsModule, Modal, DatePipe, Pagination],
   templateUrl: './admin-evaluation-periods.html',
 })
 export class AdminEvaluationPeriods implements OnInit {
@@ -22,6 +24,7 @@ export class AdminEvaluationPeriods implements OnInit {
   protected readonly Status = EvaluationPeriodStatus;
 
   protected readonly periods = signal<EvaluationPeriodDto[]>([]);
+  protected readonly table = createTableState(this.periods, { searchFields: p => [p.name, p.evaluationFormName, p.status], initialSort: { key: 'startDate', direction: 'desc' }, pageSize: 50 });
   protected readonly forms = signal<EvaluationFormDto[]>([]);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);

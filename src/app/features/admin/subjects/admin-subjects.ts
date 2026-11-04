@@ -6,10 +6,12 @@ import { DepartmentDto, SubjectDto } from '../../../core/models/admin.models';
 import { Modal } from '../../../shared/components/modal/modal';
 import { AdminDepartmentsService } from '../services/admin-departments.service';
 import { AdminSubjectsService } from '../services/admin-subjects.service';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 
 @Component({
   selector: 'app-admin-subjects',
-  imports: [Icon, ReactiveFormsModule, Modal],
+  imports: [Icon, ReactiveFormsModule, Modal, Pagination],
   templateUrl: './admin-subjects.html',
 })
 export class AdminSubjects implements OnInit {
@@ -18,6 +20,7 @@ export class AdminSubjects implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
 
   protected readonly subjects = signal<SubjectDto[]>([]);
+  protected readonly table = createTableState(this.subjects, { searchFields: s => [s.code, s.title, s.departmentName], initialSort: { key: 'code', direction: 'asc' }, pageSize: 50 });
   protected readonly departments = signal<DepartmentDto[]>([]);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);

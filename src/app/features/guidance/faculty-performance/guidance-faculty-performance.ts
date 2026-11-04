@@ -1,4 +1,5 @@
 import { ReportPeriod } from '../shared/report-period';
+import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -9,6 +10,7 @@ import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Pagination, SortHeader, TableSearch } from '../../../shared/tables/table-parts';
 import { createTableState } from '../../../shared/tables/table-state';
+import { ProfileAvatar } from '../../../shared/components/profile-avatar/profile-avatar';
 
 type FacultyTab = 'all' | 'flagged';
 type SortKey = 'name' | 'department' | 'submitted' | 'rating' | 'rapid';
@@ -24,7 +26,7 @@ type SortKey = 'name' | 'department' | 'submitted' | 'rating' | 'rapid';
  */
 @Component({
   selector: 'app-guidance-faculty-performance',
-  imports: [RouterLink, PageHeader, EmptyState, Icon, SortHeader, TableSearch, Pagination, ReportPeriod],
+  imports: [RouterLink, PageHeader, EmptyState, Icon, SortHeader, TableSearch, Pagination, ReportPeriod, ProfileAvatar, DecimalPipe],
   templateUrl: './guidance-faculty-performance.html',
 })
 export class GuidanceFacultyPerformance implements OnInit {
@@ -32,8 +34,6 @@ export class GuidanceFacultyPerformance implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  /** Mirrors back/Domain/Constants/EvaluationAnonymity.cs MinimumRespondents. */
-  protected readonly minimumRespondents = 5;
 
   protected readonly rows = signal<GuidanceFacultyPerformanceRowDto[]>([]);
   protected readonly loading = signal(true);

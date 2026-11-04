@@ -3,13 +3,15 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Modal } from '../../../shared/components/modal/modal';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { EvaluationPeriodDto } from '../../../core/models/evaluation.models';
 import { AdminEvaluationPeriodsService } from '../../admin/services/admin-evaluation-periods.service';
 import { StudentMasterlistEntry, StudentMasterlistImportResult, StudentMasterlistService, StudentMasterlistValidation } from './student-masterlist.service';
 
 @Component({
-  selector: 'app-student-masterlist', imports: [Icon, PageHeader, Modal, ReactiveFormsModule],
+  selector: 'app-student-masterlist', imports: [Icon, PageHeader, Modal, ReactiveFormsModule, Pagination],
   templateUrl: './student-masterlist.html', styleUrl: './student-masterlist.css',
 })
 export class StudentMasterlist implements OnInit {
@@ -42,6 +44,11 @@ export class StudentMasterlist implements OnInit {
     [e.studentNumber, e.firstName, e.middleName, e.lastName].join(' ').toLowerCase().includes(this.search().trim().toLowerCase())
     && (!this.status() || e.isActive === (this.status() === 'active')),
   ));
+  protected readonly table = createTableState(this.visibleEntries, {
+    searchFields: entry => [entry.studentNumber, entry.firstName, entry.middleName, entry.lastName],
+    initialSort: { key: 'studentNumber', direction: 'asc' },
+    pageSize: 50,
+  });
 
   ngOnInit(): void {
     this.periodService.list().subscribe({

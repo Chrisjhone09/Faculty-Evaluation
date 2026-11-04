@@ -3,6 +3,7 @@
     <img class="school-logo" src="/school-logo.png" alt="Colegio de Kidapawan, Inc. logo" width="88" height="88" />
     <h1>Faculty Evaluation</h1>
     <p class="subtitle">Guidance Login</p>
+    @if (passwordChanged) { <p role="status">Password changed successfully. Sign in with your new password.</p> }
     <label for="email">Email</label>
     <input id="email" type="email" formControlName="email" autocomplete="username" />
     @if (form.controls.email.invalid && form.controls.email.touched) { <p class="field-error">Enter your email.</p> }

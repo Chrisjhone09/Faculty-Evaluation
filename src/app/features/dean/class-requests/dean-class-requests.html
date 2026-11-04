@@ -27,7 +27,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (request of pending(); track request.id) {
+            @for (request of pendingTable.rows(); track request.id) {
               <tr>
                 <td>{{ request.instructorName }}</td>
                 <td>{{ request.subjectCode }} - {{ request.subjectTitle }}</td>
@@ -49,6 +49,7 @@
             }
           </tbody>
         </table>
+        <app-pagination [page]="pendingTable.page()" [pageCount]="pendingTable.pageCount()" [rangeStart]="pendingTable.rangeStart()" [rangeEnd]="pendingTable.rangeEnd()" [filteredCount]="pendingTable.filteredCount()" itemLabel="request" itemLabelPlural="requests" (previous)="pendingTable.previousPage()" (next)="pendingTable.nextPage()" />
       </div>
     }
   </div>
@@ -69,7 +70,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (request of reviewed(); track request.id) {
+            @for (request of reviewedTable.rows(); track request.id) {
               <tr>
                 <td>{{ request.instructorName }}</td>
                 <td>{{ request.subjectCode }}</td>
@@ -87,6 +88,7 @@
             }
           </tbody>
         </table>
+        <app-pagination [page]="reviewedTable.page()" [pageCount]="reviewedTable.pageCount()" [rangeStart]="reviewedTable.rangeStart()" [rangeEnd]="reviewedTable.rangeEnd()" [filteredCount]="reviewedTable.filteredCount()" itemLabel="request" itemLabelPlural="requests" (previous)="reviewedTable.previousPage()" (next)="reviewedTable.nextPage()" />
       </div>
     </div>
   }

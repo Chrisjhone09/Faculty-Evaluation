@@ -28,7 +28,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (section of sections(); track section.id) {
+        @for (section of table.rows(); track section.id) {
           <tr>
             <td>{{ section.code }}</td>
             <td>{{ section.departmentName }}</td>
@@ -47,6 +47,7 @@
         }
       </tbody>
     </table>
+    <app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="section" itemLabelPlural="sections" (previous)="table.previousPage()" (next)="table.nextPage()" />
   </div>
 }
 

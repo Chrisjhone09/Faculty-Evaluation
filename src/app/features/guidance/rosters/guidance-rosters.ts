@@ -9,14 +9,19 @@ import { ClassOfferingDto } from '../../../core/models/dean.models';
 import { Icon } from '../../../shared/components/icon/icon';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Modal } from '../../../shared/components/modal/modal';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
+import { ProfileAvatar } from '../../../shared/components/profile-avatar/profile-avatar';
 import { AdminInstructorsService } from '../../admin/services/admin-instructors.service';
 import { AdminSectionsService } from '../../admin/services/admin-sections.service';
 import { AdminSubjectsService } from '../../admin/services/admin-subjects.service';
 import { DeanClassesService } from '../../dean/services/dean-classes.service';
 
+type Semester = '1st' | '2nd';
+
 @Component({
   selector: 'app-guidance-rosters',
-  imports: [RouterLink, ReactiveFormsModule, Icon, PageHeader, Modal],
+  imports: [RouterLink, ReactiveFormsModule, Icon, PageHeader, Modal, Pagination, ProfileAvatar],
   templateUrl: './guidance-rosters.html',
   styleUrl: './guidance-rosters.css',
 })
@@ -33,6 +38,8 @@ export class GuidanceRosters implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
   protected readonly department = signal('');
+  protected readonly termFilter = signal('');
+  protected readonly instructorFilter = signal('');
   protected readonly status = signal('Active');
   protected readonly subjects = signal<SubjectDto[]>([]);
   protected readonly sections = signal<SectionDto[]>([]);
@@ -42,6 +49,7 @@ export class GuidanceRosters implements OnInit {
   protected readonly creating = signal(false);
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
+  protected readonly academicYearError = signal('');
   protected readonly selectedSectionId = signal('');
   protected readonly selectedDepartment = computed(() =>
     this.sections().find(s => s.id === this.selectedSectionId())?.departmentId,
@@ -55,9 +63,12 @@ export class GuidanceRosters implements OnInit {
   protected readonly assignmentForm = this.formBuilder.nonNullable.group({
     sectionId: ['', Validators.required],
     subjectId: ['', Validators.required],
-    term: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(100)]],
+    academicYearStart: [new Date().getFullYear(), Validators.required],
+    academicYearEnd: [new Date().getFullYear() + 1, Validators.required],
+    semester: ['1st' as Semester, Validators.required],
     instructorId: ['', Validators.required],
   });
+  protected readonly academicYearOptions = Array.from({ length: 102 }, (_, index) => 2000 + index);
   protected readonly assigningFor = signal<ClassOfferingDto | null>(null);
   protected readonly assignInstructorId = signal('');
   protected readonly assignSaving = signal(false);
@@ -69,14 +80,29 @@ export class GuidanceRosters implements OnInit {
     [...new Map(this.offerings().map(o => [o.departmentId, o.departmentName])).entries()]
       .sort((a, b) => a[1].localeCompare(b[1])),
   );
+  protected readonly terms = computed(() => [...new Set(this.offerings().map(o => o.term))].sort((a, b) => b.localeCompare(a)));
+  protected readonly offeringInstructors = computed(() => {
+    const seen = new Map<string, string>();
+    for (const offering of this.offerings()) {
+      seen.set(offering.instructorId ?? 'unassigned', offering.instructorName ?? 'Unassigned');
+    }
+    return [...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  });
   protected readonly visibleOfferings = computed(() => {
     const search = this.search().trim().toLowerCase();
     return this.offerings().filter(o =>
       (!this.department() || o.departmentId === this.department()) &&
+      (!this.termFilter() || o.term === this.termFilter()) &&
+      (!this.instructorFilter() || (this.instructorFilter() === 'unassigned' ? !o.instructorId : o.instructorId === this.instructorFilter())) &&
       (!this.status() || o.status === this.status()) &&
       [o.subjectCode, o.subjectTitle, o.sectionCode, o.term, o.instructorName, o.departmentName]
         .some(value => value?.toLowerCase().includes(search)),
     );
+  });
+  protected readonly table = createTableState(this.visibleOfferings, {
+    searchFields: offering => [offering.subjectCode, offering.subjectTitle, offering.sectionCode, offering.term, offering.instructorName, offering.departmentName],
+    initialSort: { key: 'subjectCode', direction: 'asc' },
+    pageSize: 50,
   });
 
   ngOnInit(): void {
@@ -108,21 +134,36 @@ export class GuidanceRosters implements OnInit {
   }
 
   protected openAssignment(): void {
-    this.assignmentForm.reset({ sectionId: '', subjectId: '', term: '', instructorId: '' });
+    const year = new Date().getFullYear();
+    this.assignmentForm.reset({ sectionId: '', subjectId: '', academicYearStart: year, academicYearEnd: year + 1, semester: '1st', instructorId: '' });
     this.saveError.set(null);
+    this.academicYearError.set('');
     this.creating.set(true);
+  }
+
+  protected validateAcademicYears(): boolean {
+    const { academicYearStart, academicYearEnd } = this.assignmentForm.getRawValue();
+    const start = Number(academicYearStart);
+    const end = Number(academicYearEnd);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || end <= start || end - start > 1) {
+      this.academicYearError.set('The academic year must cover exactly one year, for example 2026 to 2027.');
+      return false;
+    }
+    this.academicYearError.set('');
+    return true;
   }
 
   protected saveAssignment(): void {
     if (this.saving() || this.catalogLoading() || this.catalogError()) return;
-    if (this.assignmentForm.invalid) {
+    if (this.assignmentForm.invalid || !this.validateAcademicYears()) {
       this.assignmentForm.markAllAsTouched();
       return;
     }
     this.saving.set(true);
     this.saveError.set(null);
     const request = this.assignmentForm.getRawValue();
-    this.classesService.create({ ...request, term: request.term.trim() }).subscribe({
+    const term = `AY ${request.academicYearStart}-${request.academicYearEnd} ${request.semester} Semester`;
+    this.classesService.create({ sectionId: request.sectionId, subjectId: request.subjectId, instructorId: request.instructorId, term }).subscribe({
       next: offering => {
         this.saving.set(false);
         this.creating.set(false);

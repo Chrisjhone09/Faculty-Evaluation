@@ -5,7 +5,8 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { InstructorDto, SectionDto, SubjectDto } from '../../../core/models/admin.models';
 import { ClassOfferingDto, ClassOfferingStatus } from '../../../core/models/dean.models';
-import { TableSearch } from '../../../shared/tables/table-parts';
+import { Pagination, TableSearch } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 import { Modal } from '../../../shared/components/modal/modal';
 import { AdminInstructorsService } from '../../admin/services/admin-instructors.service';
 import { AdminSectionsService } from '../../admin/services/admin-sections.service';
@@ -14,7 +15,7 @@ import { DeanClassesService } from '../services/dean-classes.service';
 
 @Component({
   selector: 'app-dean-classes',
-  imports: [ReactiveFormsModule, Modal, RouterLink, TableSearch],
+  imports: [ReactiveFormsModule, Modal, RouterLink, TableSearch, Pagination],
   templateUrl: './dean-classes.html',
 })
 export class DeanClasses implements OnInit {
@@ -34,6 +35,10 @@ export class DeanClasses implements OnInit {
     (!this.departmentFilter() || o.departmentId === this.departmentFilter()) &&
     [o.subjectCode, o.subjectTitle, o.sectionCode, o.instructorName, o.term, o.departmentName]
       .some(value => value?.toLowerCase().includes(this.search().toLowerCase()))));
+  protected readonly table = createTableState(this.visibleOfferings, {
+    searchFields: offering => [offering.subjectCode, offering.subjectTitle, offering.sectionCode, offering.instructorName, offering.term, offering.departmentName],
+    initialSort: { key: 'subjectCode', direction: 'asc' }, pageSize: 50,
+  });
   protected readonly departmentOptions = computed(() => [...new Map(this.sections().map(s => [s.departmentId, s.departmentName])).entries()]);
   protected readonly selectedSectionId = signal('');
   protected readonly createInstructors = computed(() => {
@@ -63,7 +68,7 @@ export class DeanClasses implements OnInit {
   protected readonly createForm = this.formBuilder.nonNullable.group({
     subjectId: ['', [Validators.required]],
     sectionId: ['', [Validators.required]],
-    term: ['', [Validators.required, Validators.maxLength(100)]],
+    term: ['', [Validators.required, Validators.pattern(/^AY\s+\d{4}-\d{4}\s+(?:1st|2nd)\s*Semester$/i), Validators.maxLength(100)]],
     instructorId: [''],
   });
 

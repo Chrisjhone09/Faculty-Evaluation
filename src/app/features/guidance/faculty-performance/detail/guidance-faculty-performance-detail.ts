@@ -7,6 +7,8 @@ import { ReportPeriod } from '../../shared/report-period';
 import { AnalyticsChart } from '../../../../shared/charts/analytics-chart';
 import { ProfileAvatar } from '../../../../shared/components/profile-avatar/profile-avatar';
 import { Icon } from '../../../../shared/components/icon/icon';
+import { Pagination } from '../../../../shared/tables/table-parts';
+import { createTableState } from '../../../../shared/tables/table-state';
 import { GuidanceFacultyPerformanceDetailDto, GuidanceFacultySummaryDto } from '../../../../core/models/guidance.models';
 import { GuidanceReportingService } from '../../services/guidance-reporting.service';
 
@@ -18,7 +20,7 @@ import { GuidanceReportingService } from '../../services/guidance-reporting.serv
  */
 @Component({
   selector: 'app-guidance-faculty-performance-detail',
-  imports: [RouterLink, DatePipe, DecimalPipe, AnalyticsChart, ProfileAvatar, Icon, ReportPeriod],
+  imports: [RouterLink, DatePipe, DecimalPipe, AnalyticsChart, ProfileAvatar, Icon, ReportPeriod, Pagination],
   styleUrls: ['./faculty-detail.css', './faculty-analytics.css', './faculty-feedback.css'],
   templateUrl: './guidance-faculty-performance-detail.html',
 })
@@ -31,20 +33,39 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
   protected readonly detail = signal<GuidanceFacultyPerformanceDetailDto | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
-  protected readonly feedbackType = signal<'all' | 'comments' | 'rapid'>('all');
-  protected readonly feedbackCount = computed(() =>
-    (this.detail()?.comments.length ?? 0) + (this.detail()?.rapidAppraisalComments.length ?? 0));
-  protected readonly feedbackFilters = computed(() => [
-    { key: 'all' as const, label: 'All feedback', count: this.feedbackCount() },
-    { key: 'comments' as const, label: 'Written', count: this.detail()?.comments.length ?? 0 },
-    { key: 'rapid' as const, label: 'Rapid appraisal', count: this.detail()?.rapidAppraisalComments.length ?? 0 },
+  protected readonly reportLoading = signal(false);
+  protected readonly reportError = signal<string | null>(null);
+
+  protected async downloadReport(): Promise<void> {
+    const detail = this.detail();
+    if (!detail || this.loading() || this.reportLoading() || this.summaryLoading()) return;
+    this.reportLoading.set(true);
+    this.reportError.set(null);
+    try {
+      const { downloadFacultyReport } = await import('./faculty-report');
+      await downloadFacultyReport(detail, this.summary());
+    } catch {
+      this.reportError.set('Could not create the PDF report. Please try again.');
+    } finally {
+      this.reportLoading.set(false);
+    }
+  }
+  protected readonly feedbackRows = computed(() => [
+    ...(this.detail()?.comments ?? []).map((comment, index) => ({ ...comment, source: 'Written', key: `written-${index}` })),
+    ...(this.detail()?.rapidAppraisalComments ?? []).map((comment, index) => ({ ...comment, source: 'Rapid appraisal', key: `rapid-${index}` })),
   ]);
+  protected readonly feedbackCount = computed(() => this.feedbackRows().length);
+  protected readonly feedbackTable = createTableState(this.feedbackRows, {
+    searchFields: comment => [comment.commentText, comment.questionText, comment.source],
+    pageSize: 50,
+  });
 
   /** Keys of comments currently showing their original (unfiltered) text - see toggleOriginal(). */
   protected readonly expandedOriginals = signal<ReadonlySet<string>>(new Set());
 
-  // --- AI summary - generated only when the button below is clicked. ---
+  // --- AI summary - generated only when a Guidance user clicks the action. ---
   protected readonly summary = signal<GuidanceFacultySummaryDto | null>(null);
+  protected readonly summaryOpen = signal(false);
   protected readonly summaryLoading = signal(false);
   protected readonly summaryError = signal<string | null>(null);
   protected readonly summaryHasNewData = computed(() => {
@@ -110,12 +131,16 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
   ngOnInit(): void {}
   protected loadPeriod(periodId: string | undefined): void {
     this.request?.unsubscribe(); this.periodId.set(periodId);
-    this.loading.set(true); this.errorMessage.set(null); this.summary.set(null);
+    this.loading.set(true); this.errorMessage.set(null); this.summary.set(null); this.summaryOpen.set(false);
     this.summaryError.set(null); this.expandedOriginals.set(new Set());
+    this.reportError.set(null);
     this.request = this.reportingService.getFacultyPerformanceDetail(this.instructorId, periodId).subscribe({
       next: (detail) => {
         this.detail.set(detail);
         this.summary.set(detail.savedSummary ?? null);
+        // A saved result opens once on entry; after it is dismissed it stays closed
+        // until Guidance explicitly reopens it from the header action.
+        this.summaryOpen.set(!!detail.savedSummary);
         this.loading.set(false);
       },
       error: () => {
@@ -128,12 +153,6 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
   /** key format: "comments-{index}" or "rapid-{index}" - just needs to be unique per comment. */
   protected isOriginalExpanded(key: string): boolean {
     return this.expandedOriginals().has(key);
-  }
-
-  protected selectFeedbackType(type: 'all' | 'comments' | 'rapid'): void {
-    if (this.feedbackType() === type) return;
-    this.feedbackType.set(type);
-    this.expandedOriginals.set(new Set());
   }
 
   protected toggleOriginal(key: string): void {
@@ -152,6 +171,7 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
     if (this.summaryLoading() || !this.detail()?.meetsAnonymityThreshold) return;
     this.summaryLoading.set(true);
     this.summaryError.set(null);
+    this.summaryOpen.set(true);
 
     this.reportingService.generateFacultySummary(this.instructorId, this.periodId()).subscribe({
       next: (result) => {
@@ -163,5 +183,27 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
         this.summaryLoading.set(false);
       },
     });
+  }
+
+  protected openSummary(): void {
+    if (this.summary()) this.summaryOpen.set(true);
+  }
+
+  protected closeSummary(): void {
+    this.summaryOpen.set(false);
+  }
+
+  /** Renders only the saved Overall interpretation section. */
+  protected formatSummary(summary: string): string {
+    const marker = '**Overall interpretation**';
+    const markerIndex = summary.indexOf(marker);
+    let visible = markerIndex >= 0 ? summary.slice(markerIndex) : summary.split(/\n\s*\n/)[0];
+    const separatorIndex = visible.search(/\n\s*---\s*(?:\n|$)/);
+    if (separatorIndex >= 0) visible = visible.slice(0, separatorIndex);
+    const nextSectionIndex = visible.search(/\n\s*\*\*(?:Quantitative results|Written feedback|Key strengths|Important concerns|Scale-sentiment consistency|Representative anonymous feedback|Data limitations)\*\*/i);
+    if (nextSectionIndex >= 0) visible = visible.slice(0, nextSectionIndex);
+    return visible.trim()
+      .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+      .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
   }
 }

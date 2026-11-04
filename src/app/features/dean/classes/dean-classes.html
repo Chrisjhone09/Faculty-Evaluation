@@ -41,7 +41,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (offering of visibleOfferings(); track offering.id) {
+        @for (offering of table.rows(); track offering.id) {
           <tr>
             <td>{{ offering.subjectCode }} - {{ offering.subjectTitle }}</td>
             <td>{{ offering.sectionCode }}</td>
@@ -76,6 +76,7 @@
         }
       </tbody>
     </table>
+    <app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="class" itemLabelPlural="classes" (previous)="table.previousPage()" (next)="table.nextPage()" />
   </div>
 }
 
@@ -100,8 +101,10 @@
       </select>
     </div>
     <div class="form-field">
-      <label for="cls-term">Term</label>
-      <input id="cls-term" type="text" formControlName="term" placeholder="e.g. AY 2026-2027, 1st Semester" />
+      <label for="cls-term">Academic term</label>
+      <input id="cls-term" type="text" formControlName="term" placeholder="AY 2026-2027 1st Semester" aria-describedby="cls-term-help" />
+      <span id="cls-term-help" class="hint">Format: AY YYYY-YYYY 1st Semester or AY YYYY-YYYY 2nd Semester.</span>
+      @if (createForm.controls.term.touched && createForm.controls.term.invalid) { <span class="field-error">Use the format AY 2026-2027 1st Semester or AY 2026-2027 2nd Semester.</span> }
     </div>
     <div class="form-field">
       <label for="cls-instructor">Instructor (optional - can assign later)</label>

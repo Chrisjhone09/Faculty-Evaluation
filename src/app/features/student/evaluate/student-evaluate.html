@@ -7,81 +7,117 @@
 } @else if (loadError()) {
   <div class="banner-error">{{ loadError() }}</div>
 } @else if (submitted()) {
-  <div class="card">
-    <h1 style="margin-top: 0;">Thank you</h1>
-    <p style="color: var(--color-text-muted);">Your evaluation has been submitted. Your answers are anonymous to your instructor.</p>
+  <div class="card submission-success">
+    <div class="success-icon" aria-hidden="true">✓</div>
+    <h1>Thank you</h1>
+    <p>Your evaluation has been submitted. Your answers are anonymous to your instructor.</p>
     <button type="button" class="btn btn-primary" (click)="backToDashboard()">Back to dashboard</button>
   </div>
 } @else if (form(); as f) {
-  <h1>{{ f.instructorName }}</h1>
-  <p style="color: var(--color-text-muted); margin: 0 0 1.5rem;">{{ f.subjectCode }} &middot; {{ f.subjectTitle }} &middot; {{ f.sectionCode }}</p>
+  <div class="evaluation-header">
+    <app-profile-avatar kind="instructors" [profileId]="f.instructorId" [name]="f.instructorName" size="large" />
+    <div>
+      <p class="eyebrow">Faculty evaluation</p>
+      <h1>{{ f.instructorName }}</h1>
+      <p class="evaluation-context">{{ f.subjectCode }} &middot; {{ f.subjectTitle }} &middot; {{ f.sectionCode }}</p>
+    </div>
+    <div class="progress-summary" aria-live="polite">
+      <strong>{{ answeredCount() }} / {{ totalRatedQuestions() }}</strong>
+      <span>ratings answered</span>
+    </div>
+  </div>
+
+  <div class="evaluation-guide">
+    <strong>How to answer</strong>
+    <span>Select the response that best describes your experience. All questions are required.</span>
+  </div>
+
+  <div class="evaluation-progress" role="progressbar" aria-label="Evaluation completion"
+    [attr.aria-valuenow]="completionPercent()" aria-valuemin="0" aria-valuemax="100">
+    <span [style.width.%]="completionPercent()"></span>
+  </div>
 
   @if (submitError()) {
     <div class="banner-error" style="margin-bottom: 1rem;">{{ submitError() }}</div>
   }
 
-  @for (category of allCategories(); track category.id) {
-    <div class="card" style="margin-bottom: 1.25rem;">
-      <h3 style="margin-top: 0;">{{ category.name }}</h3>
+  @for (category of allCategories(); track category.id; let categoryIndex = $index) {
+    <section class="evaluation-section">
+      <div class="section-heading">
+        <span class="section-number">{{ categoryIndex + 1 }}</span>
+        <h2>{{ category.name }}</h2>
+      </div>
 
-      @for (question of category.questions; track question.id) {
-        <div class="form-field" style="margin-bottom: 1.25rem;">
-          <label>{{ question.text }}</label>
+      @for (question of category.questions; track question.id; let questionIndex = $index) {
+        <article class="question-card" [class.question-card-reverse]="question.isReverseScored">
+          <div class="question-heading">
+            <span class="question-number">{{ questionIndex + 1 }}</span>
+            <div>
+              <h3>{{ question.text }}</h3>
+              @if (question.isReverseScored) {
+                <span class="reverse-indicator">↕ Reversed statement</span>
+              }
+            </div>
+          </div>
 
           @if (question.questionType === QuestionType.Likert1to5) {
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.4rem;">
+            <fieldset class="rating-fieldset">
+              <legend class="sr-only">Choose a rating for {{ question.text }}</legend>
               @for (value of ratingScale; track value) {
-                <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: normal;">
+                <label class="rating-option" [class.rating-selected]="answers()[question.id]?.ratingValue === value">
                   <input
                     type="radio"
                     [name]="question.id"
                     [checked]="answers()[question.id]?.ratingValue === value"
                     (change)="setRating(question.id, value)"
                   />
-                  {{ value }}
+                  <span class="rating-value">{{ value }}</span>
+                  <span class="rating-label">{{ ratingLabel(question, value) }}</span>
                 </label>
               }
-            </div>
-            <span class="hint" style="color: var(--color-text-muted);">1 = Strongly Disagree, 5 = Strongly Agree</span>
+            </fieldset>
+            <p class="scale-note">{{ question.isReverseScored ? 'Reversed scale: 5 = Strongly disagree · 1 = Strongly agree' : 'Scale: 5 = Strongly agree · 1 = Strongly disagree' }}</p>
           } @else if (question.questionType === QuestionType.RapidAppraisal) {
-            <div style="display: flex; gap: 1rem; margin-top: 0.4rem; flex-wrap: wrap;">
+            <fieldset class="rating-fieldset rapid-rating">
+              <legend class="sr-only">Choose a rating for {{ question.text }}</legend>
               @for (value of rapidAppraisalScale; track value) {
-                <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: normal;">
+                <label class="rating-option" [class.rating-selected]="answers()[question.id]?.ratingValue === value">
                   <input
                     type="radio"
                     [name]="question.id"
                     [checked]="answers()[question.id]?.ratingValue === value"
                     (change)="setRating(question.id, value)"
                   />
-                  {{ value }}
+                  <span class="rating-value">{{ value }}</span>
+                  <span class="rating-label">{{ value === 10 ? 'Outstanding' : value === 6 ? 'Needs improvement' : '' }}</span>
                 </label>
               }
-            </div>
-            <span class="hint" style="color: var(--color-text-muted);">6 = Needs Improvement, 10 = Outstanding</span>
+            </fieldset>
+            <p class="scale-note">Scale: 10 = Outstanding · 6 = Needs improvement</p>
             <textarea
               rows="3"
-              style="margin-top: 0.6rem;"
+              class="comment-box"
               placeholder="Written feedback (optional)" maxlength="2000"
               [value]="answers()[question.id]?.commentText ?? ''"
               (input)="setComment(question.id, $event)"
             ></textarea>
           } @else {
             <textarea
-              rows="3" maxlength="2000" placeholder="Written feedback (optional)"
+              class="comment-box" rows="3" maxlength="2000" placeholder="Written feedback (optional)"
               [value]="answers()[question.id]?.commentText ?? ''"
               (input)="setComment(question.id, $event)"
             ></textarea>
           }
 
           @if (fieldErrors()[question.id]) {
-            <div class="banner-error" style="margin-top: 0.5rem;">{{ fieldErrors()[question.id] }}</div>
+            <div class="banner-error question-error">{{ fieldErrors()[question.id] }}</div>
           }
-        </div>
+        </article>
       }
-    </div>
+    </section>
   }
 
-  <div class="form-actions">
+  <div class="form-actions evaluation-actions">
     <button type="button" class="btn btn-primary" [disabled]="submitting()" (click)="submit()">
       {{ submitting() ? 'Submitting…' : 'Submit evaluation' }}
     </button>

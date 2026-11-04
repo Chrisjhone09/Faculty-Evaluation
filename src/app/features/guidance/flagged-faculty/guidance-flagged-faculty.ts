@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { GuidanceFlaggedFacultyDto } from '../../../core/models/guidance.models';
 import { GuidanceReportingService } from '../services/guidance-reporting.service';
@@ -10,7 +11,7 @@ import { GuidanceReportingService } from '../services/guidance-reporting.service
  */
 @Component({
   selector: 'app-guidance-flagged-faculty',
-  imports: [RouterLink],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './guidance-flagged-faculty.html',
 })
 export class GuidanceFlaggedFaculty implements OnInit {

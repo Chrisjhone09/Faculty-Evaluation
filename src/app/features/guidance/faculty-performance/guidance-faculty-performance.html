@@ -41,7 +41,7 @@
   <div class="banner-warning">
     <app-icon name="alert-triangle" size="sm" />
     <div class="alert-body">
-      Faculty with weighted scores below 50/100 or conflicting numerical and written sentiment results.
+      Faculty whose weighted scores fall in this period’s Negative band, or whose numerical ratings contradict the written sentiment.
     </div>
   </div>
 }
@@ -141,6 +141,7 @@
             <tr [class.row-warning]="row.isFlagged">
               <td data-label="Instructor">
                 <div class="row" style="gap: var(--space-2);">
+                  <app-profile-avatar kind="instructors" [profileId]="row.instructorId" [name]="row.instructorName" [editable]="true" />
                   <div>
                     <div class="cell-primary">{{ row.instructorName }}</div>
                     <div class="cell-meta">{{ row.employeeNumber }}</div>
@@ -157,7 +158,7 @@
               <td data-label="Responses" class="cell-numeric">{{ row.evaluationsSubmittedCount }}</td>
               <td data-label="Rating" class="cell-numeric">
                 @if (row.meetsAnonymityThreshold && row.analytics.weightedScore !== null) {
-                  <span class="font-semibold">{{ row.analytics.weightedScore }}</span
+                  <span class="font-semibold">{{ row.analytics.weightedScore | number:'1.2-2' }}</span
                   ><span class="text-muted"> / 100</span>
                 } @else if (row.hasEvaluationData) {
                   <span class="text-subtle text-xs">

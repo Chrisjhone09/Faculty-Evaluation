@@ -1,5 +1,5 @@
 <a routerLink="/guidance/faculty" [queryParams]="{ period: periodId() }" class="back-link"><app-icon name="arrow-left" /> Back to Faculty Performance</a>
-<app-report-period [value]="periodId()" [disabled]="summaryLoading()" (selected)="loadPeriod($event)" />
+<app-report-period [value]="periodId()" [disabled]="summaryLoading() || reportLoading()" (selected)="loadPeriod($event)" />
 @if (errorMessage()) { <div class="banner-error" role="alert">{{ errorMessage() }}</div> }
 @if (loading()) { <p class="loading-row" role="status"><span class="spinner"></span> Loading performance...</p> }
 @else if (detail(); as d) {
@@ -10,31 +10,67 @@
         <div class="profile-meta"><span><app-icon name="building" size="sm" /> {{ d.departmentName }}</span><span class="employee-number">Employee no. {{ d.employeeNumber }}</span></div>
       </div>
     </div>
-    <span class="badge" [class.badge-warning]="d.isFlagged" [class.badge-muted]="!d.isFlagged">{{ d.analytics.comparison }}</span>
+    <div class="faculty-header-actions">
+      <button class="btn" type="button" [disabled]="reportLoading() || summaryLoading()" (click)="downloadReport()"><app-icon name="download" /> {{ reportLoading() ? 'Creating PDF...' : 'Download PDF report' }}</button>
+      @if (d.meetsAnonymityThreshold && d.analytics.weightedScore !== null) {
+        @if (summary()) {
+          <button class="btn btn-primary" type="button" (click)="openSummary()"><app-icon name="sparkles" /> View AI summary</button>
+          <button class="btn btn-sm" type="button" [disabled]="summaryLoading()" (click)="generateSummary()"><app-icon name="refresh" /> Regenerate</button>
+        } @else {
+          <button class="btn btn-primary" type="button" [disabled]="summaryLoading()" (click)="generateSummary()"><app-icon name="sparkles" /> {{ summaryLoading() ? 'Generating...' : 'Generate summary' }}</button>
+        }
+      }
+      <span class="badge" [class.badge-warning]="d.isFlagged" [class.badge-muted]="!d.isFlagged">{{ d.analytics.comparison }}</span>
+    </div>
   </header>
+  @if (reportError()) { <div class="banner-error" role="alert">{{ reportError() }}</div> }
   @if (!d.meetsAnonymityThreshold) {
     <section class="score-status" aria-labelledby="score-status-title">
       <span class="status-icon"><app-icon name="eye-off" size="lg" /></span>
       <div class="status-copy"><h2 id="score-status-title">Insufficient Responses</h2>
         <p>{{ d.respondentCount }} of {{ d.analytics.minimumRespondents }} required respondents.</p>
+        @if (d.analytics.respondentThresholdMode === 'Percentage') { <p>{{ d.analytics.respondentPercentage }}% of {{ d.analytics.eligibleStudents }} eligible students, rounded up.</p> }
       </div>
       <div class="respondent-progress"><progress [value]="d.respondentCount" [max]="d.analytics.minimumRespondents" aria-label="Required student respondents"></progress></div>
     </section>
   } @else {
     <div class="performance-metrics">
       <div><span class="metric-label"><app-icon name="star" /> Weighted score</span><strong>{{ d.analytics.weightedScore === null ? '--' : (d.analytics.weightedScore | number:'1.2-2') }} <small>/ 100</small></strong><span class="metric-note">Inventory 90% &middot; Rapid appraisal 10%</span></div>
-      <div><span class="metric-label"><app-icon name="clipboard" /> Inventory score</span><strong>{{ d.analytics.inventoryScore === null ? '--' : (d.analytics.inventoryScore | number:'1.2-2') }} <small>/ 100</small></strong><span class="metric-note">{{ d.overallAverageRating | number:'1.2-2' }} / 5 after scoring</span></div>
-      <div><span class="metric-label"><app-icon name="check-circle" /> Rapid appraisal</span><strong>{{ d.analytics.rapidAppraisalScore === null ? '--' : (d.analytics.rapidAppraisalScore | number:'1.2-2') }} <small>/ 100</small></strong><span class="metric-note">{{ d.rapidAppraisalAverageRating | number:'1.2-2' }} / 10</span></div>
-      <div><span class="metric-label"><app-icon name="users" /> Respondents</span><strong>{{ d.respondentCount | number }}</strong><span class="metric-note">{{ d.analytics.responseRate === null ? '--' : (d.analytics.responseRate | number:'1.1-1') + '%' }} response rate &middot; {{ d.analytics.eligibleStudents }} eligible students</span></div>
+      <div><span class="metric-label"><app-icon name="clipboard" /> Inventory score</span><strong>{{ d.analytics.inventoryScore === null ? '--' : (d.analytics.inventoryScore | number:'1.2-2') }} <small>/ 100</small></strong><span class="metric-note">Average item rating: {{ d.overallAverageRating === null ? '--' : (d.overallAverageRating | number:'1.2-2') }} / 5</span></div>
+      <div><span class="metric-label"><app-icon name="check-circle" /> Rapid appraisal average</span><strong>{{ d.rapidAppraisalAverageRating === null ? '--' : (d.rapidAppraisalAverageRating | number:'1.2-2') }} <small>/ 10</small></strong><span class="metric-note">Average student rating</span></div>
+      <div><span class="metric-label"><app-icon name="users" /> Respondents</span><strong>{{ d.respondentCount | number }}</strong><span class="metric-note">{{ d.analytics.responseRate === null ? '--' : (d.analytics.responseRate | number:'1.2-2') + '%' }} response rate &middot; {{ d.analytics.eligibleStudents }} eligible students</span></div>
     </div>
-    <section class="detail-section"><div class="section-title"><h2>Scale-Sentiment Matching</h2><span class="badge" [class.badge-warning]="d.isFlagged">{{ d.analytics.comparison }}</span></div>
-      <p>Numerical classification: <strong>{{ d.analytics.scoreSentiment || '--' }}</strong> &middot; Written sentiment: <strong>{{ d.analytics.dominantSentiment || 'Insufficient Data' }}</strong></p>
-      <p>{{ d.analytics.interpretation }}</p><p class="muted">AI-assisted interpretation &middot; Positive: 75-100 &middot; Neutral: 50-under 75 &middot; Negative: below 50</p></section>
+    <section class="detail-section sentiment-match-section" aria-labelledby="sentiment-match-title">
+      <div class="section-title sentiment-match-heading">
+        <div><span class="section-kicker">Consistency check</span><h2 id="sentiment-match-title">Scale–Sentiment Matching</h2></div>
+        <span class="match-status" [class.match-status-warning]="d.isFlagged"><app-icon [name]="d.isFlagged ? 'alert-triangle' : 'check-circle'" size="sm" /> {{ d.analytics.comparison }}</span>
+      </div>
+      <div class="match-signals" aria-label="Comparison of numerical ratings and written sentiment">
+        <div class="match-signal match-signal-score">
+          <div class="match-signal-label"><span class="match-signal-icon"><app-icon name="star" size="sm" /></span><span>Numerical rating</span></div>
+          <strong>{{ d.analytics.scoreSentiment || '--' }}</strong>
+          <span class="match-signal-detail">Weighted score <b>{{ d.analytics.weightedScore === null ? '--' : (d.analytics.weightedScore | number:'1.2-2') }}/100</b></span>
+        </div>
+        <div class="match-divider" aria-hidden="true"><span>compared with</span><app-icon name="chevron-right" /></div>
+        <div class="match-signal match-signal-written">
+          <div class="match-signal-label"><span class="match-signal-icon"><app-icon name="message" size="sm" /></span><span>Written sentiment</span></div>
+          <strong>{{ d.analytics.dominantSentiment || 'Insufficient Data' }}</strong>
+          <span class="match-signal-detail">{{ d.analytics.balancedSentiment ? 'Balanced feedback' : d.analytics.writtenRespondents + ' written contributors' }}</span>
+        </div>
+      </div>
+      <p class="match-readable-summary"><span>Numerical classification: <strong>{{ d.analytics.scoreSentiment || '--' }}</strong></span><span>Written sentiment: <strong>{{ d.analytics.dominantSentiment || 'Insufficient Data' }}</strong></span></p>
+      <div class="match-interpretation" [class.match-interpretation-warning]="d.isFlagged">
+        <span class="match-interpretation-icon"><app-icon [name]="d.isFlagged ? 'alert-triangle' : 'check-circle'" size="md" /></span>
+        <div><strong>{{ d.analytics.comparison }} interpretation</strong><p>{{ d.analytics.interpretation }}</p></div>
+      </div>
+      <p class="match-scale-guide"><app-icon name="info" size="sm" /> <span><b>Score guide:</b> Positive {{ d.analytics.positiveScoreMinimum }}–100 · Neutral {{ d.analytics.neutralScoreMinimum }}–under {{ d.analytics.positiveScoreMinimum }} · Negative below {{ d.analytics.neutralScoreMinimum }}</span></p>
+    </section>
     <div class="performance-charts">
       <section class="detail-section"><div class="section-title"><h2>Student Sentiment</h2><span class="badge badge-muted">{{ d.analytics.dominantSentiment || 'Insufficient Written Feedback' }}{{ d.analytics.balancedSentiment ? ' - balanced feedback' : '' }}</span></div>
         @if (d.analytics.hasReliableSentiment) {
           <app-analytics-chart [config]="sentimentChart()" label="Positive, neutral and negative student feedback" />
         } @else { <p class="empty-state">{{ d.analytics.writtenRespondents }} of {{ d.analytics.minimumCommentRespondents }} required written-feedback contributors.</p> }
+        @if (d.analytics.commentThresholdMode === 'Percentage') { <p class="muted">Requires {{ d.analytics.commentPercentage }}% of {{ d.respondentCount }} respondents to provide classified feedback, rounded up.</p> }
         <div class="distribution-values"><div><span>Positive</span><strong>{{ d.analytics.positive }}</strong></div><div><span>Neutral</span><strong>{{ d.analytics.neutral }}</strong></div><div><span>Negative</span><strong>{{ d.analytics.negative }}</strong></div></div>
         @if (d.analytics.unclassifiedComments) { <p class="muted">{{ d.analytics.unclassifiedComments }} comments could not be classified.</p> }
       </section>
@@ -59,48 +95,72 @@
     <div class="section-title feedback-heading"><h2 id="feedback-title"><app-icon name="message" size="lg" /> Student feedback <span class="badge badge-muted">{{ feedbackCount() }}</span></h2>
       <span class="anonymous-label"><app-icon name="eye-off" size="sm" /> Anonymous</span>
     </div>
-    <div class="feedback-filters" role="group" aria-label="Feedback type">
-      @for (filter of feedbackFilters(); track filter.key) {
-        <button type="button" [class.active]="feedbackType() === filter.key" [attr.aria-pressed]="feedbackType() === filter.key" (click)="selectFeedbackType(filter.key)">{{ filter.label }} <span>{{ filter.count }}</span></button>
-      }
-    </div>
-    @for (group of [{ title: 'Written Feedback', key: 'comments', rows: d.comments }, { title: 'Rapid Appraisal Feedback', key: 'rapid', rows: d.rapidAppraisalComments }]; track group.key) {
-      @if (feedbackType() === group.key || (feedbackType() === 'all' && group.rows.length)) {
-        <section class="feedback-group" [attr.aria-label]="group.title">
-          <h3>{{ group.title }} <span>{{ group.rows.length }} {{ group.rows.length === 1 ? 'comment' : 'comments' }}</span></h3>
-          <ul class="feedback-list">
-            @for (comment of group.rows; track $index) {
-              <li class="feedback-item" [class.flagged]="comment.isFlaggedNegative">
-                <p>{{ comment.commentText }}</p>
-                @if (comment.isFlaggedNegative || comment.originalCommentText) {
-                  <div class="feedback-actions">
-                    @if (comment.isFlaggedNegative) { <span class="badge badge-warning"><app-icon name="flag" size="sm" /> Flagged negative</span> }
-                    @if (comment.originalCommentText) {
-                      <button class="btn btn-sm original-toggle" type="button" [attr.aria-expanded]="isOriginalExpanded(group.key + '-' + $index)" [attr.aria-controls]="'original-' + group.key + '-' + $index" (click)="toggleOriginal(group.key + '-' + $index)"><app-icon [name]="isOriginalExpanded(group.key + '-' + $index) ? 'eye-off' : 'eye'" size="sm" /> {{ isOriginalExpanded(group.key + '-' + $index) ? 'Hide original' : 'Show original' }}</button>
-                    }
-                  </div>
+    @if (feedbackTable.filteredCount()) {
+      <ul class="feedback-list">
+        @for (comment of feedbackTable.rows(); track comment.key) {
+          <li class="feedback-item" [class.flagged]="comment.isFlaggedNegative">
+            <div class="feedback-item-head">
+              <span class="feedback-type">{{ comment.source }}</span>
+              @if (comment.source === 'Rapid appraisal' && comment.ratingValue !== null && comment.ratingValue !== undefined) {
+                <span class="feedback-score">Student score: <strong>{{ comment.ratingValue }}/10</strong></span>
+              }
+            </div>
+            <p>{{ comment.commentText }}</p>
+            @if (comment.isFlaggedNegative || comment.originalCommentText) {
+              <div class="feedback-actions">
+                @if (comment.isFlaggedNegative) { <span class="badge badge-warning"><app-icon name="flag" size="sm" /> Flagged negative</span> }
+                @if (comment.originalCommentText) {
+                  <button class="btn btn-sm original-toggle" type="button" [attr.aria-expanded]="isOriginalExpanded(comment.key)" [attr.aria-controls]="'original-' + comment.key" (click)="toggleOriginal(comment.key)"><app-icon [name]="isOriginalExpanded(comment.key) ? 'eye-off' : 'eye'" size="sm" /> {{ isOriginalExpanded(comment.key) ? 'Hide original' : 'Show original' }}</button>
                 }
-                @if (comment.originalCommentText && isOriginalExpanded(group.key + '-' + $index)) {
-                  <div class="original-feedback" [id]="'original-' + group.key + '-' + $index"><span>Original comment</span><blockquote>{{ comment.originalCommentText }}</blockquote></div>
-                }
-              </li>
-            } @empty { <li class="empty-feedback"><app-icon name="inbox" size="lg" /><p>No {{ group.key === 'comments' ? 'written' : 'rapid appraisal' }} comments submitted.</p></li> }
-          </ul>
-        </section>
-      }
+              </div>
+            }
+            @if (comment.originalCommentText && isOriginalExpanded(comment.key)) {
+              <div class="original-feedback" [id]="'original-' + comment.key"><span>Original comment</span><blockquote>{{ comment.originalCommentText }}</blockquote></div>
+            }
+          </li>
+        }
+      </ul>
+      <app-pagination [page]="feedbackTable.page()" [pageCount]="feedbackTable.pageCount()" [rangeStart]="feedbackTable.rangeStart()" [rangeEnd]="feedbackTable.rangeEnd()" [filteredCount]="feedbackTable.filteredCount()" itemLabel="comment" itemLabelPlural="comments" (previous)="feedbackTable.previousPage()" (next)="feedbackTable.nextPage()" />
+    } @else {
+      <div class="empty-feedback"><app-icon name="inbox" size="lg" /><p>No feedback submitted.</p></div>
     }
-    @if (feedbackType() === 'all' && !feedbackCount()) { <div class="empty-feedback"><app-icon name="inbox" size="lg" /><p>No feedback submitted.</p></div> }
   </section>
-  @if (d.meetsAnonymityThreshold && d.analytics.weightedScore !== null) {
-    <section class="detail-section summary-section" aria-labelledby="summary-title" [attr.aria-busy]="summaryLoading()"><div class="section-title"><h2 id="summary-title"><app-icon name="sparkles" /> AI Performance Summary</h2><button class="btn" type="button" [disabled]="summaryLoading()" (click)="generateSummary()"><app-icon [name]="summary() ? 'refresh' : 'sparkles'" /> {{ summaryLoading() ? 'Generating...' : summary() ? 'Regenerate summary' : 'Generate summary' }}</button></div>
-      @if (summaryError()) { <div class="banner-error" role="alert">{{ summaryError() }}</div> }
-      @if (summaryLoading()) { <p class="summary-loading" role="status"><span class="spinner"></span> {{ summary() ? 'Updating performance analysis...' : 'Analyzing student evaluations...' }}</p> }
-      @if (summary(); as saved) {
-        <div class="summary-meta"><span><app-icon name="clock" size="sm" /> {{ saved.generatedAtUtc | date:'medium' }}</span><span>{{ saved.evaluationCount | number }} evaluations &middot; {{ saved.respondentCount | number }} respondents</span>
-          @if (summaryHasNewData()) { <span class="badge badge-warning">Evaluation data has changed</span> }
+  @if (summaryOpen()) {
+    <div class="summary-overlay" role="presentation" (click)="closeSummary()">
+      <section class="summary-dialog" role="dialog" aria-modal="true" aria-labelledby="summary-title" [attr.aria-busy]="summaryLoading()" (click)="$event.stopPropagation()" (keydown.escape)="closeSummary()" tabindex="-1">
+        <div class="summary-dialog-header">
+          <div><span class="eyebrow">Guidance insight</span><h2 id="summary-title"><app-icon name="sparkles" /> AI Performance Summary</h2></div>
+          <button class="btn btn-icon" type="button" aria-label="Close summary" title="Close summary" (click)="closeSummary()"><app-icon name="x" /></button>
         </div>
-        <p class="summary-text">{{ saved.summary }}</p>
-      } @else if (!summaryLoading()) { <p class="muted">No performance summary saved.</p> }
-    </section>
+        @if (summaryError()) { <div class="banner-error" role="alert">{{ summaryError() }}</div> }
+        @if (summaryLoading()) { <p class="summary-loading" role="status"><span class="spinner"></span> {{ summary() ? 'Updating performance analysis...' : 'Analyzing student evaluations...' }}</p> }
+        @if (summary(); as saved) {
+          <div class="summary-meta"><span><app-icon name="clock" size="sm" /> {{ saved.generatedAtUtc | date:'medium' }}</span><span>{{ saved.evaluationCount | number }} evaluations &middot; {{ saved.respondentCount | number }} respondents</span>
+            @if (summaryHasNewData()) { <span class="badge badge-warning">Evaluation data has changed</span> }
+            @if (saved.isStale) { <span class="badge badge-warning">Evaluation rules changed — regenerate this summary</span> }
+          </div>
+          <div class="summary-overview" aria-label="Overall interpretation at a glance">
+            <div class="summary-result">
+              <span>Numerical rating</span>
+              <strong>{{ d.analytics.weightedScore === null ? '--' : (d.analytics.weightedScore | number:'1.2-2') }}<small>/100</small></strong>
+              <em>{{ d.analytics.scoreSentiment ?? 'Unavailable' }}</em>
+            </div>
+            <div class="summary-result">
+              <span>Overall sentiment</span>
+              <strong>{{ d.analytics.dominantSentiment ?? 'Unavailable' }}</strong>
+              @if (d.analytics.balancedSentiment) { <em>Balanced feedback</em> }
+            </div>
+            <div class="summary-result" [class.summary-result-warning]="d.analytics.comparison === 'Contradictory'">
+              <span>Interpretation</span>
+              <strong>{{ d.analytics.comparison }}</strong>
+              <em>Ratings and written feedback</em>
+            </div>
+          </div>
+          <p class="summary-interpretation"><strong>Overall interpretation:</strong> {{ d.analytics.interpretation }}</p>
+          <div class="summary-text" [innerHTML]="formatSummary(saved.summary)"></div>
+          <div class="summary-dialog-actions"><button class="btn" type="button" [disabled]="summaryLoading()" (click)="generateSummary()"><app-icon name="refresh" /> Regenerate summary</button><button class="btn btn-primary" type="button" (click)="closeSummary()">Close</button></div>
+        } @else if (!summaryLoading()) { <p class="muted">No performance summary saved.</p> }
+      </section>
+    </div>
   }
 }

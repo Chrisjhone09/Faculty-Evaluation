@@ -32,8 +32,10 @@ export const GUIDANCE_ROUTES: Routes = [
       },
 
       { path: 'sentiment-validation', loadComponent: () => import('./sentiment-validation/sentiment-validation').then(m => m.SentimentValidation) },
-      { path: 'settings', loadComponent: () => import('./evaluation-settings/evaluation-settings').then(m => m.EvaluationSettings) },
-      { path: 'users', loadComponent: () => import('../admin/users/admin-users').then(m => m.AdminUsers) },
+      { path: 'settings', loadComponent: () => import('./settings/guidance-settings').then(m => m.GuidanceSettings) },
+      { path: 'ai-settings', pathMatch: 'full', redirectTo: '/guidance/settings?tab=ai' },
+      { path: 'account', pathMatch: 'full', redirectTo: '/guidance/settings?tab=account' },
+      { path: 'users', pathMatch: 'full', redirectTo: 'dashboard' },
       { path: 'student-masterlist', loadComponent: () => import('./student-masterlist/student-masterlist').then(m => m.StudentMasterlist) },
       { path: 'academics', loadComponent: () => import('../admin/academics/admin-academics').then(m => m.AdminAcademics) },
       { path: 'evaluations', loadComponent: () => import('../admin/evaluations/admin-evaluations').then(m => m.AdminEvaluations) },

@@ -36,8 +36,10 @@
       
     </div>
     <div class="form-field">
-      <label for="req-term">Term</label>
-      <input id="req-term" type="text" formControlName="term" placeholder="e.g. AY 2026-2027, 1st Semester" />
+      <label for="req-term">Academic term</label>
+      <input id="req-term" type="text" formControlName="term" placeholder="AY 2026-2027 1st Semester" aria-describedby="req-term-help" />
+      <span id="req-term-help" class="hint">Format: AY YYYY-YYYY 1st Semester or AY YYYY-YYYY 2nd Semester.</span>
+      @if (form.controls.term.touched && form.controls.term.invalid) { <span class="field-error">Use the format AY 2026-2027 1st Semester or AY 2026-2027 2nd Semester.</span> }
     </div>
     <div class="form-field">
       <label for="req-students">Proposed students (optional)</label>

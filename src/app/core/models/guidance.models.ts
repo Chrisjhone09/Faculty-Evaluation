@@ -31,6 +31,9 @@ export interface GuidanceEvaluationCommentDto {
   commentText: string;
   isFlaggedNegative: boolean;
   originalCommentText: string | null;
+  questionText?: string | null;
+  sentiment?: 'Positive' | 'Neutral' | 'Negative' | null;
+  ratingValue?: number | null;
 }
 
 export interface GuidanceFacultyPerformanceDetailDto {
@@ -57,6 +60,7 @@ export interface GuidanceFacultyPerformanceDetailDto {
 }
 
 export interface GuidanceFacultySummaryDto {
+  isStale?: boolean;
   summary: string;
   generatedAtUtc: string;
   evaluationCount: number;
@@ -146,6 +150,9 @@ export interface GuidanceAnalyticsDto {
 }
 
 export interface FacultyAnalyticsDto {
+  neutralScoreMinimum: number; positiveScoreMinimum: number;
+  respondentThresholdMode: string; respondentPercentage: number;
+  commentThresholdMode: string; commentPercentage: number;
   scoreSentiment: string | null; balancedSentiment: boolean;
   periodId: string | null; periodName: string;
   minimumRespondents: number; minimumCommentRespondents: number;

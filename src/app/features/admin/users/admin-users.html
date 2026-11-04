@@ -2,9 +2,9 @@
 @if (error() && !modal()) { <div class="banner-error" role="alert">{{ error() }}</div> }
 @if (loading()) { <p class="loading-row">Loading...</p> }
 @else { <div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
-  <tbody>@for (user of users(); track user.id) { <tr><td>{{ user.fullName }}</td><td>{{ user.email }}</td><td><span class="badge" [class.badge-success]="user.isActive">{{ user.isActive ? 'Active' : 'Inactive' }}</span></td>
+  <tbody>@for (user of table.rows(); track user.id) { <tr><td>{{ user.fullName }}</td><td>{{ user.email }}</td><td><span class="badge" [class.badge-success]="user.isActive">{{ user.isActive ? 'Active' : 'Inactive' }}</span></td>
     <td><button class="btn btn-sm" type="button" [disabled]="busy()" (click)="toggle(user)"><app-icon [name]="user.isActive ? 'x' : 'check'" /> {{ user.isActive ? 'Deactivate' : 'Activate' }}</button></td></tr> }
-    @empty { <tr><td colspan="4" class="empty-state">No Guidance accounts.</td></tr> }</tbody></table></div> }
+    @empty { <tr><td colspan="4" class="empty-state">No Guidance accounts.</td></tr> }</tbody></table><app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="account" itemLabelPlural="accounts" (previous)="table.previousPage()" (next)="table.nextPage()" /></div> }
 <app-modal [open]="modal()" title="Add Guidance account" (closed)="modal.set(false)">
   <form [formGroup]="form" (ngSubmit)="save()" novalidate>
     <div class="form-field"><label for="staff-name">Full name</label><input id="staff-name" formControlName="fullName" /></div>

@@ -46,7 +46,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (comment of comments(); track $index) {
+          @for (comment of table.rows(); track $index) {
             <tr>
               <td data-label="Instructor">{{ comment.instructorName }}</td>
               <td data-label="Department">{{ comment.departmentName }}</td>
@@ -79,5 +79,6 @@
         </tbody>
       </table>
     </div>
+    <app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="comment" itemLabelPlural="comments" (previous)="table.previousPage()" (next)="table.nextPage()" />
   }
 }

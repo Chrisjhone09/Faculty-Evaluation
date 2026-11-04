@@ -4,7 +4,9 @@ h3 { font-size: 16px; }
 .batch-form, .results-section { padding: 20px 0; border-bottom: 1px solid var(--color-border); margin-bottom: 20px; }
 .batch-fields { display: grid; grid-template-columns: minmax(160px, 1fr) 140px auto; gap: 16px; align-items: end; max-width: 780px; }
 .batch-fields .form-field { margin-bottom: 0; }
+.batch-helper { display: flex; align-items: center; gap: 6px; margin: 14px 0 0; color: var(--color-text-muted); font-size: var(--text-xs); }
 .review-heading, .review-toolbar, .review-actions, .pagination { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.batch-row-actions { display: flex; align-items: center; gap: 8px; }
 .review-heading, .review-toolbar { justify-content: space-between; margin: 20px 0; }
 .rubric { border-block: 1px solid var(--color-border); padding: 16px 0; }
 .rubric summary { cursor: pointer; font-weight: 600; }
@@ -15,6 +17,15 @@ progress { display: block; width: 200px; max-width: 100%; height: 6px; margin-to
 .metrics div:nth-child(2) { border-color: #4e9db6; }.metrics div:nth-child(3) { border-color: #c78a27; }.metrics div:nth-child(4) { border-color: #b75e78; }
 .metrics span, .comment-number { color: var(--color-text-muted); font-size: 13px; }
 .metrics strong { font-size: 26px; }
+.help-indicator { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 4px; border: 1px solid currentColor; border-radius: 50%; color: var(--color-primary); font-size: 10px; font-weight: 700; line-height: 1; cursor: help; vertical-align: 1px; }
+.help-indicator::after { content: attr(data-help-tooltip); position: absolute; z-index: 30; left: 50%; bottom: calc(100% + 9px); width: max-content; max-width: 290px; padding: 10px 12px; border: 1px solid #3b4150; border-radius: 8px; background: #202532; color: #fff; box-shadow: 0 8px 22px rgb(15 23 42 / 22%); font-size: 12px; font-weight: 400; line-height: 1.45; text-align: left; white-space: normal; pointer-events: none; opacity: 0; transform: translate(-50%, 5px); transition: opacity 140ms ease, transform 140ms ease; }
+.help-indicator::before { content: ''; position: absolute; z-index: 31; left: 50%; bottom: calc(100% + 4px); border: 5px solid transparent; border-top-color: #3b4150; pointer-events: none; opacity: 0; transform: translate(-50%, 5px); transition: opacity 140ms ease, transform 140ms ease; }
+.help-indicator:hover::after, .help-indicator:hover::before, .help-indicator:focus-visible::after, .help-indicator:focus-visible::before { opacity: 1; transform: translate(-50%, 0); }
+.help-indicator:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.results-section > .table-wrap:has(.help-indicator) { overflow: visible; }
+.results-section > .table-wrap:has(.help-indicator) .help-indicator::after { top: calc(100% + 9px); bottom: auto; transform: translate(-50%, -5px); }
+.results-section > .table-wrap:has(.help-indicator) .help-indicator::before { top: calc(100% + 4px); bottom: auto; border-top-color: transparent; border-bottom-color: #3b4150; transform: translate(-50%, -5px); }
+.results-section > .table-wrap:has(.help-indicator) .help-indicator:hover::after, .results-section > .table-wrap:has(.help-indicator) .help-indicator:hover::before, .results-section > .table-wrap:has(.help-indicator) .help-indicator:focus-visible::after, .results-section > .table-wrap:has(.help-indicator) .help-indicator:focus-visible::before { transform: translate(-50%, 0); }
 .review-items { display: grid; gap: 16px; padding-top: 20px; }
 .review-item { padding: 20px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); min-width: 0; }
 .review-item p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }

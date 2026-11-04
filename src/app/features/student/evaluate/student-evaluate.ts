@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   EvaluationCategoryDto,
@@ -10,6 +10,7 @@ import {
   SubmitEvaluationAnswerRequest,
 } from '../../../core/models/evaluation.models';
 import { StudentEvaluationsService } from '../services/student-evaluations.service';
+import { ProfileAvatar } from '../../../shared/components/profile-avatar/profile-avatar';
 
 interface AnswerState {
   ratingValue: number | null;
@@ -19,8 +20,9 @@ interface AnswerState {
 /** Renders the active EvaluationForm's categories/questions for one pending class and submits POST /api/evaluations (architecture doc §6.2). */
 @Component({
   selector: 'app-student-evaluate',
-  imports: [RouterLink],
+  imports: [RouterLink, ProfileAvatar],
   templateUrl: './student-evaluate.html',
+  styleUrl: './student-evaluate.css',
 })
 export class StudentEvaluate implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -45,6 +47,13 @@ export class StudentEvaluate implements OnInit {
   protected readonly submitError = signal<string | null>(null);
   protected readonly submitting = signal(false);
   protected readonly submitted = signal(false);
+  protected readonly answeredCount = computed(() => Object.values(this.answers()).filter(answer => answer.ratingValue !== null).length);
+  protected readonly totalRatedQuestions = computed(() => this.form()?.categories.flatMap(category => category.questions)
+    .filter(question => question.questionType === QuestionType.Likert1to5 || question.questionType === QuestionType.RapidAppraisal).length ?? 0);
+  protected readonly completionPercent = computed(() => {
+    const total = this.totalRatedQuestions();
+    return total ? Math.round((this.answeredCount() / total) * 100) : 0;
+  });
 
   ngOnInit(): void {
     this.evaluationsService.getSubmissionForm(this.classMembershipId).subscribe({
@@ -77,6 +86,13 @@ export class StudentEvaluate implements OnInit {
 
   protected allCategories(): EvaluationCategoryDto[] {
     return this.form()?.categories ?? [];
+  }
+
+  protected ratingLabel(question: { isReverseScored?: boolean }, value: number): string {
+    if (question.isReverseScored) {
+      return ({ 5: 'Strongly disagree', 4: 'Disagree', 3: 'Neutral', 2: 'Agree', 1: 'Strongly agree' } as Record<number, string>)[value];
+    }
+    return ({ 5: 'Strongly agree', 4: 'Agree', 3: 'Neutral', 2: 'Disagree', 1: 'Strongly disagree' } as Record<number, string>)[value];
   }
 
   protected submit(): void {

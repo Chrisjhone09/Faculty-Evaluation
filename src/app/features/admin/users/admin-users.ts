@@ -5,11 +5,14 @@ import { UserDto } from '../../../core/models/admin.models';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Modal } from '../../../shared/components/modal/modal';
 import { AdminUsersService } from '../services/admin-users.service';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 
-@Component({ selector: 'app-admin-users', imports: [Icon, Modal, ReactiveFormsModule], templateUrl: './admin-users.html' })
+@Component({ selector: 'app-admin-users', imports: [Icon, Modal, ReactiveFormsModule, Pagination], templateUrl: './admin-users.html' })
 export class AdminUsers implements OnInit {
   private readonly service = inject(AdminUsersService);
   protected readonly users = signal<UserDto[]>([]);
+  protected readonly table = createTableState(this.users, { searchFields: u => [u.fullName, u.email], initialSort: { key: 'fullName', direction: 'asc' }, pageSize: 50 });
   protected readonly loading = signal(true);
   protected readonly error = signal('');
   protected readonly modal = signal(false);

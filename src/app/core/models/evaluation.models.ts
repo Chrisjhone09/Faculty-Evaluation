@@ -119,6 +119,7 @@ export interface EvaluationSubmissionFormDto {
   subjectCode: string;
   subjectTitle: string;
   sectionCode: string;
+  instructorId: string;
   instructorName: string;
   categories: EvaluationCategoryDto[];
 }

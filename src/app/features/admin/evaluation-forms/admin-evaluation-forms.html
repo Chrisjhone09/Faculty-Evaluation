@@ -31,7 +31,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (form of forms(); track form.id) {
+        @for (form of table.rows(); track form.id) {
           <tr>
             <td>
               {{ form.name }}
@@ -71,6 +71,7 @@
         }
       </tbody>
     </table>
+    <app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="form" itemLabelPlural="forms" (previous)="table.previousPage()" (next)="table.nextPage()" />
   </div>
 }
 

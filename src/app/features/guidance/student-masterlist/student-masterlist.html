@@ -50,7 +50,7 @@
     <div class="table-wrap"><table class="data-table masterlist-table">
       <thead><tr><th>Student ID</th><th>First name</th><th>Middle name</th><th>Last name</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
       <tbody>
-        @for (entry of visibleEntries(); track entry.id) {
+        @for (entry of table.rows(); track entry.id) {
           <tr><td>{{ entry.studentNumber }}</td><td>{{ entry.firstName }}</td><td>{{ entry.middleName || '--' }}</td><td>{{ entry.lastName }}</td>
             <td><span class="badge" [class.badge-success]="entry.isActive" [class.badge-muted]="!entry.isActive">{{ entry.isActive ? 'Eligible' : 'Inactive' }}</span></td>
             <td class="cell-actions">@if (editable()) {
@@ -61,6 +61,7 @@
         } @empty { <tr><td colspan="6" class="empty-state">No matching students.</td></tr> }
       </tbody>
     </table></div>
+    <app-pagination [page]="table.page()" [pageCount]="table.pageCount()" [rangeStart]="table.rangeStart()" [rangeEnd]="table.rangeEnd()" [filteredCount]="table.filteredCount()" itemLabel="student" itemLabelPlural="students" (previous)="table.previousPage()" (next)="table.nextPage()" />
   }
 </section>
 <app-modal [open]="modal()" [title]="editing() ? 'Edit student' : 'Add student'" (closed)="modal.set(false)">

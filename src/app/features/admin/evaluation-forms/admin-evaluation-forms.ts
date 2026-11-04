@@ -7,10 +7,12 @@ import { RouterLink } from '@angular/router';
 import { EvaluationFormDto } from '../../../core/models/evaluation.models';
 import { Modal } from '../../../shared/components/modal/modal';
 import { AdminEvaluationFormsService } from '../services/admin-evaluation-forms.service';
+import { Pagination } from '../../../shared/tables/table-parts';
+import { createTableState } from '../../../shared/tables/table-state';
 
 @Component({
   selector: 'app-admin-evaluation-forms',
-  imports: [Icon, ReactiveFormsModule, Modal, RouterLink],
+  imports: [Icon, ReactiveFormsModule, Modal, RouterLink, Pagination],
   templateUrl: './admin-evaluation-forms.html',
 })
 export class AdminEvaluationForms implements OnInit {
@@ -19,6 +21,7 @@ export class AdminEvaluationForms implements OnInit {
   protected readonly workspaceRoot = inject(AuthService).currentUser()?.roles.includes('Guidance') ? '/guidance' : '/admin';
 
   protected readonly forms = signal<EvaluationFormDto[]>([]);
+  protected readonly table = createTableState(this.forms, { searchFields: f => [f.name, f.description], initialSort: { key: 'name', direction: 'asc' }, pageSize: 50 });
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
 
