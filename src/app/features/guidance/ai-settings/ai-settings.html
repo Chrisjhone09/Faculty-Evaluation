@@ -21,6 +21,13 @@
   </section>
 </div>
 <section class="ai-card usage-section">
+  <h2>Credential security</h2>
+  <p>Generate a new encryption key to protect your saved OpenAI API credential. The system securely replaces the key and re-encrypts the credential in one update.</p>
+  <p class="hint">Your OpenAI API key stays the same. Rotation does not make an AI request or incur API charges. The encryption key is generated securely on the server and is never displayed.</p>
+  <button type="button" class="btn btn-primary" [disabled]="busy() || !settings()?.hasKey" (click)="rotateSecurityKey()">{{ busy() ? 'Please wait…' : 'Rotate security key' }}</button>
+  @if (!settings()?.hasKey) { <p class="hint">Connect OpenAI first to enable key rotation.</p> }
+</section>
+<section class="ai-card usage-section">
   <header><div><h2><app-icon name="chart" /> AI usage</h2><p>Estimated application spending in Philippine pesos · calendar months in UTC</p></div><button class="btn btn-icon" aria-label="Refresh AI usage" [disabled]="busy()" (click)="load()"><app-icon name="refresh" /></button></header>
   <p class="hint">Budgeting conversion: US$1 = {{ exchangeRate() | currency:'PHP':'symbol':'1.2-2' }}. This configured estimate is not a live exchange rate; your actual bank charge may differ.</p>
   @if (visibleUsage(); as u) {

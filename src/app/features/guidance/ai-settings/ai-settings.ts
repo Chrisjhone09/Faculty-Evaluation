@@ -69,6 +69,9 @@ export class AiSettings {
     this.run(this.http.post(`${this.url}/connect`, { apiKey: key }), 'OpenAI connection verified and encrypted.');
   }
   protected test(): void { this.run(this.http.post(`${this.url}/test`, {}), 'Test completed. Token usage is included in your history.'); }
+  protected rotateSecurityKey(): void {
+    this.run(this.http.post(`${this.url}/security-key/rotate`, {}), 'Security key rotated. Your saved API credential has been re-encrypted and the connection remains available.');
+  }
   protected disconnect(): void {
     if (confirm('Disconnect your OpenAI API key?')) { this.models.set([]); this.run(this.http.delete(`${this.url}/connection`), 'OpenAI disconnected. Usage history is retained.'); }
   }
