@@ -135,23 +135,21 @@ export function createFacultyReport(
     table(['#', 'Inventory statement', 'Average / 5'], detail.questionRatings.map((q, i) => [i + 1, clean(q.questionText), number(q.averageRating)]), { 0: { cellWidth: 10 }, 1: { cellWidth: 136 }, 2: { cellWidth: 32 } });
   else paragraph('Question-level numerical results are unavailable until the respondent requirement is met.');
 
-  section('06', 'Anonymous student feedback');
+  section('06', 'Combined student sentiment summary');
   const comments = [...detail.comments, ...detail.rapidAppraisalComments];
-  comments.forEach(c => {
-    doc.setFont('helvetica', 'normal').setFontSize(9.5).setTextColor(ink);
-    const lines = doc.splitTextToSize(clean(c.commentText), width - 6) as string[];
-    // Keep a comment together when it fits on one page; longer comments
-    // continue with a hanging indent and without repeating the bullet.
-    space(Math.min(lines.length * 5 + 4, bottom - 36));
-    lines.forEach((line, index) => {
-      space(6);
-      if (index === 0) doc.setFillColor(ink).circle(margin + 1, y - 1, 0.65, 'F');
-      doc.text(line, margin + 6, y);
-      y += 5;
-    });
-    y += 4;
-  });
   if (!comments.length) paragraph('No written feedback submitted for this instructor and period.');
+  else {
+    paragraph(`**Feedback reviewed:** ${comments.length} comments across written and rapid appraisal feedback.`);
+    if (!detail.meetsAnonymityThreshold || !a.hasReliableSentiment)
+      paragraph('There is insufficient response data or classified written feedback to assign a reliable overall sentiment.');
+    else {
+      const total = a.positive + a.neutral + a.negative;
+      paragraph(`**Overall written sentiment:** ${a.dominantSentiment ?? 'Unavailable'}. Across ${total} classified student contributors, ${a.positive} were Positive (${number(a.positive / total * 100)}%), ${a.neutral} Neutral (${number(a.neutral / total * 100)}%), and ${a.negative} Negative (${number(a.negative / total * 100)}%).`);
+      paragraph(`**Interpretation:** ${a.interpretation}`);
+      paragraph('The combined sentiment reflects student perceptions across this instructor\'s subjects. Review both positive experiences and negative concerns alongside the numerical results. See the saved AI performance summary for available themes and contextual interpretation.', 9, muted);
+    }
+    if (a.unclassifiedComments) paragraph(`${a.unclassifiedComments} comments have no available sentiment classification and are excluded from the classified distribution.`, 9, muted);
+  }
 
   const pages = doc.getNumberOfPages();
   for (let index = 1; index <= pages; index++) {
