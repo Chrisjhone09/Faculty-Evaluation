@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { GuidanceFacultyPerformanceDetailDto, GuidanceFacultySummaryDto } from '../../../../core/models/guidance.models';
+import type { GuidanceFacultyPerformanceDetailDto, GuidanceFacultySummaryDto, FeedbackSummaryDto } from '../../../../core/models/guidance.models';
 
 const purple = '#6b21a8';
 const ink = '#202034';
@@ -13,6 +13,7 @@ export function createFacultyReport(
   detail: GuidanceFacultyPerformanceDetailDto,
   summary: GuidanceFacultySummaryDto | null,
   logo?: string,
+  feedbackSummary?: FeedbackSummaryDto | null,
 ): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const a = detail.analytics;
@@ -136,6 +137,12 @@ export function createFacultyReport(
   else paragraph('Question-level numerical results are unavailable until the respondent requirement is met.');
 
   section('06', 'Combined student sentiment summary');
+  if (feedbackSummary) {
+    paragraph(`**Grouped student feedback** | ${feedbackSummary.studentCount} students | ${feedbackSummary.commentCount} comments\nSaved ${new Date(feedbackSummary.generatedAtUtc).toLocaleString('en-PH')}`, 9, muted);
+    if (feedbackSummary.isStale) paragraph('**Feedback has changed:** Regenerate the saved feedback summary to include the latest comments.');
+    table(['Summarized feedback', 'Students'], feedbackSummary.themes.map(t => [clean(t.summary), t.studentCount]), { 0: { cellWidth: 150 }, 1: { cellWidth: 28 } });
+    paragraph('AI groups comments by similar meaning. Counts are distinct students per theme. A student may appear in multiple themes; counts should not be added as a total population. Grouping summarizes perceptions and does not verify claims.', 9, muted);
+  } else paragraph('No grouped feedback summary saved. Click Summarize feedback on the instructor page, then download this report again.', 9, muted);
   const comments = [...detail.comments, ...detail.rapidAppraisalComments];
   if (!comments.length) paragraph('No written feedback submitted for this instructor and period.');
   else {
@@ -167,7 +174,7 @@ export function createFacultyReport(
   return doc;
 }
 
-export async function downloadFacultyReport(detail: GuidanceFacultyPerformanceDetailDto, summary: GuidanceFacultySummaryDto | null): Promise<void> {
+export async function downloadFacultyReport(detail: GuidanceFacultyPerformanceDetailDto, summary: GuidanceFacultySummaryDto | null, feedbackSummary?: FeedbackSummaryDto | null): Promise<void> {
   let logo: string | undefined;
   try {
     const response = await fetch(new URL('school-logo.png', document.baseURI));
@@ -182,5 +189,5 @@ export async function downloadFacultyReport(detail: GuidanceFacultyPerformanceDe
     }
   } catch { /* Branding is optional; the report remains available. */ }
   const filename = `Faculty-Report-${detail.instructorName}-${detail.analytics.periodName}`.replace(/[^a-z0-9-]+/gi, '-').replace(/-+$/g, '');
-  createFacultyReport(detail, summary, logo).save(`${filename}.pdf`);
+  createFacultyReport(detail, summary, logo, feedbackSummary).save(`${filename}.pdf`);
 }

@@ -62,6 +62,7 @@ async function setup(page: Page) {
     else if (path === '/evaluation-forms/f1') body = form;
     else if (path === '/guidance/faculty-performance') body = [row];
     else if (path === '/guidance/faculty-performance/i1/detail') body = detail;
+    else if (path.endsWith('/feedback-summary')) body = null;
     else if (path === '/guidance/student-masterlist') body = [student];
     else if (path === '/guidance/evaluation-settings') body = { minimumRespondents: 5, minimumCommentRespondents: 5 };
     else if (path.startsWith('/profile-photos/')) { await route.fulfill({ status: 404 }); return; }
@@ -79,7 +80,39 @@ async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
 
-test('instructor PDF downloads all feedback and saved summary without an AI request', async ({ page }, info) => {
+test('feedback summary generates on click, reopens saved groups and exports without regeneration', async ({ page }, info) => {
+  await setup(page);
+  let generations = 0;
+  const saved = { generatedAtUtc: '2026-11-05T00:00:00Z', studentCount: 7, commentCount: 9, isStale: false,
+    themes: [{ summary: 'Students value clear explanations.', studentCount: 5, commentCount: 6 }, { summary: 'Students request more regular classes.', studentCount: 2, commentCount: 3 }] };
+  await page.route('**/api/guidance/faculty-performance/i1/feedback-summary?*', async route => {
+    if (route.request().method() === 'POST') { generations++; await route.fulfill({ json: saved }); }
+    else await route.fulfill({ json: generations ? saved : null });
+  });
+  await page.goto('/guidance/faculty/i1?period=p1');
+  const generate = page.getByRole('button', { name: 'Summarize feedback', exact: true });
+  await expect(generate).toBeEnabled();
+  expect(generations).toBe(0);
+  await generate.click();
+  const dialog = page.getByRole('dialog', { name: 'Student feedback summary' });
+  await expect(dialog.getByText('5 students', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Students value clear explanations.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Close feedback summary', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole('button', { name: 'View feedback summary', exact: true }).click();
+  await expect(dialog).toBeVisible();
+  expect(generations).toBe(1);
+  await page.getByRole('button', { name: 'Close feedback summary', exact: true }).click();
+  const downloadEvent = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download PDF report', exact: true }).click();
+  const download = await downloadEvent;
+  expect(await download.failure()).toBeNull();
+  await download.saveAs(info.outputPath('grouped-feedback-report.pdf'));
+  expect(generations).toBe(1);
+  await noOverflow(page);
+});
+
+test('instructor PDF downloads saved summary without an AI request', async ({ page }, info) => {
   await setup(page);
   let aiRequests = 0;
   await page.route('**/api/guidance/faculty-performance/i1/summary', async route => {

@@ -1,5 +1,5 @@
 <a routerLink="/guidance/faculty" [queryParams]="{ period: periodId() }" class="back-link"><app-icon name="arrow-left" /> Back to Faculty Performance</a>
-<app-report-period [value]="periodId()" [disabled]="summaryLoading() || reportLoading()" (selected)="loadPeriod($event)" />
+<app-report-period [value]="periodId()" [disabled]="summaryLoading() || reportLoading() || feedbackSummaryBusy()" (selected)="loadPeriod($event)" />
 @if (errorMessage()) { <div class="banner-error" role="alert">{{ errorMessage() }}</div> }
 @if (loading()) { <p class="loading-row" role="status"><span class="spinner"></span> Loading performance...</p> }
 @else if (detail(); as d) {
@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="faculty-header-actions">
-      <button class="btn" type="button" [disabled]="reportLoading() || summaryLoading()" (click)="downloadReport()"><app-icon name="download" /> {{ reportLoading() ? 'Creating PDF...' : 'Download PDF report' }}</button>
+      <button class="btn" type="button" [disabled]="reportLoading() || summaryLoading() || feedbackSummaryBusy() || feedbackSummaryReading()" (click)="downloadReport()"><app-icon name="download" /> {{ reportLoading() ? 'Creating PDF...' : 'Download PDF report' }}</button>
       @if (d.meetsAnonymityThreshold && d.analytics.weightedScore !== null) {
         @if (summary()) {
           <button class="btn btn-primary" type="button" (click)="openSummary()"><app-icon name="sparkles" /> View AI summary</button>
@@ -93,7 +93,9 @@
   }
   <section class="feedback-workspace" aria-labelledby="feedback-title">
     <div class="section-title feedback-heading"><h2 id="feedback-title"><app-icon name="message" size="lg" /> Student feedback <span class="badge badge-muted">{{ feedbackCount() }}</span></h2>
-      <span class="anonymous-label"><app-icon name="eye-off" size="sm" /> Anonymous</span>
+      <div class="feedback-heading-actions"><span class="anonymous-label"><app-icon name="eye-off" size="sm" /> Anonymous</span>
+        <button type="button" class="btn btn-primary" [disabled]="!feedbackCount() || feedbackSummaryBusy() || feedbackSummaryReading()" (click)="openFeedbackSummary()"><app-icon name="sparkles" /> {{ feedbackSummaryReading() ? 'Loading summary…' : feedbackSummaryBusy() ? 'Summarizing…' : feedbackSummary() ? 'View feedback summary' : 'Summarize feedback' }}</button>
+      </div>
     </div>
     @if (feedbackTable.filteredCount()) {
       <ul class="feedback-list">
@@ -125,6 +127,25 @@
       <div class="empty-feedback"><app-icon name="inbox" size="lg" /><p>No feedback submitted.</p></div>
     }
   </section>
+  @if (feedbackSummaryOpen()) {
+    <div class="summary-overlay" (click)="feedbackSummaryOpen.set(false)" (keydown.escape)="feedbackSummaryOpen.set(false)">
+      <section class="summary-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-summary-title" tabindex="0" (click)="$event.stopPropagation()" [attr.aria-busy]="feedbackSummaryBusy()">
+        <div class="summary-dialog-header"><h2 id="feedback-summary-title"><app-icon name="sparkles" /> Student feedback summary</h2><button type="button" class="btn btn-icon" aria-label="Close feedback summary" (click)="feedbackSummaryOpen.set(false)"><app-icon name="x" /></button></div>
+        @if (feedbackSummaryError()) { <p class="banner-error" role="alert">{{ feedbackSummaryError() }}</p> }
+        @if (feedbackSummaryBusy()) { <p role="status"><span class="spinner"></span> Grouping similar feedback and counting students…</p> }
+        @if (feedbackSummary(); as saved) {
+          <p class="summary-meta">{{ saved.studentCount }} students · {{ saved.commentCount }} comments · Saved {{ saved.generatedAtUtc | date:'medium' }}</p>
+          @if (saved.isStale) { <p class="banner-error">Feedback has changed. Regenerate to include the latest comments.</p> }
+          <p class="muted">AI groups similar feedback. Each student counts once per theme and may appear in several themes. Counts do not indicate whether a claim is true.</p>
+          <ul class="feedback-list">@for (theme of saved.themes; track $index) {
+            <li class="feedback-item"><span class="feedback-type">{{ theme.studentCount }} {{ theme.studentCount === 1 ? 'student' : 'students' }}</span><p>{{ theme.summary }}</p></li>
+          }</ul>
+          <p class="muted">This saved summary is included in the instructor PDF report.</p>
+        }
+        <div class="summary-dialog-actions"><button type="button" class="btn" [disabled]="feedbackSummaryBusy()" (click)="generateFeedbackSummary()">{{ feedbackSummary() ? 'Regenerate summary' : 'Retry summarization' }}</button><button type="button" class="btn btn-primary" (click)="feedbackSummaryOpen.set(false)">Close</button></div>
+      </section>
+    </div>
+  }
   @if (summaryOpen()) {
     <div class="summary-overlay" role="presentation" (click)="closeSummary()">
       <section class="summary-dialog" role="dialog" aria-modal="true" aria-labelledby="summary-title" [attr.aria-busy]="summaryLoading()" (click)="$event.stopPropagation()" (keydown.escape)="closeSummary()" tabindex="-1">

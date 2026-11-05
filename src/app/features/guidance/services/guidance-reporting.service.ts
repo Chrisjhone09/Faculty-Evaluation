@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../../core/config/api-config';
 import {
+  FeedbackSummaryDto,
   GuidanceAnalyticsDto,
   GuidanceCommentsResultDto,
   GuidanceDepartmentPerformanceDto,
@@ -15,6 +16,12 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class GuidanceReportingService {
+  getFeedbackSummary(instructorId: string, periodId?: string): Observable<FeedbackSummaryDto | null> {
+    return this.http.get<FeedbackSummaryDto | null>(`${this.baseUrl}/faculty-performance/${instructorId}/feedback-summary`, { params: periodId ? { periodId } : {} });
+  }
+  generateFeedbackSummary(instructorId: string, periodId?: string): Observable<FeedbackSummaryDto> {
+    return this.http.post<FeedbackSummaryDto>(`${this.baseUrl}/faculty-performance/${instructorId}/feedback-summary`, {}, { params: periodId ? { periodId } : {} });
+  }
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${API_BASE_URL}/guidance`;
 

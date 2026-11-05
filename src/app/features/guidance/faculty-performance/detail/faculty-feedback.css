@@ -19,3 +19,4 @@
   .feedback-item { padding: var(--space-3); }
   .original-toggle { margin-left: 0; }
 }
+.feedback-heading-actions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; flex-wrap: wrap; }

@@ -1,7 +1,8 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReportPeriod } from '../../shared/report-period';
 import { AnalyticsChart } from '../../../../shared/charts/analytics-chart';
@@ -9,7 +10,7 @@ import { ProfileAvatar } from '../../../../shared/components/profile-avatar/prof
 import { Icon } from '../../../../shared/components/icon/icon';
 import { Pagination } from '../../../../shared/tables/table-parts';
 import { createTableState } from '../../../../shared/tables/table-state';
-import { GuidanceFacultyPerformanceDetailDto, GuidanceFacultySummaryDto } from '../../../../core/models/guidance.models';
+import { GuidanceFacultyPerformanceDetailDto, GuidanceFacultySummaryDto, FeedbackSummaryDto } from '../../../../core/models/guidance.models';
 import { GuidanceReportingService } from '../../services/guidance-reporting.service';
 
 /**
@@ -25,6 +26,25 @@ import { GuidanceReportingService } from '../../services/guidance-reporting.serv
   templateUrl: './guidance-faculty-performance-detail.html',
 })
 export class GuidanceFacultyPerformanceDetail implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly feedbackSummary = signal<FeedbackSummaryDto | null>(null);
+  protected readonly feedbackSummaryOpen = signal(false);
+  protected readonly feedbackSummaryBusy = signal(false);
+  protected readonly feedbackSummaryError = signal('');
+  protected readonly feedbackSummaryReading = signal(false);
+  protected openFeedbackSummary(): void {
+    this.feedbackSummaryOpen.set(true);
+    if (!this.feedbackSummary() && !this.feedbackSummaryReading()) this.generateFeedbackSummary();
+  }
+  protected generateFeedbackSummary(): void {
+    if (this.feedbackSummaryBusy() || this.feedbackSummaryReading()) return;
+    const period = this.periodId();
+    this.feedbackSummaryBusy.set(true); this.feedbackSummaryError.set('');
+    this.reportingService.generateFeedbackSummary(this.instructorId, period).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: result => { if (period !== this.periodId()) return; this.feedbackSummary.set(result); this.feedbackSummaryBusy.set(false); },
+      error: (e: HttpErrorResponse) => { if (period !== this.periodId()) return; this.feedbackSummaryError.set(e.error?.detail ?? 'Could not summarize feedback. Please try again.'); this.feedbackSummaryBusy.set(false); },
+    });
+  }
   private readonly route = inject(ActivatedRoute);
   private readonly reportingService = inject(GuidanceReportingService);
 
@@ -38,12 +58,12 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
 
   protected async downloadReport(): Promise<void> {
     const detail = this.detail();
-    if (!detail || this.loading() || this.reportLoading() || this.summaryLoading()) return;
+    if (!detail || this.loading() || this.reportLoading() || this.summaryLoading() || this.feedbackSummaryBusy() || this.feedbackSummaryReading()) return;
     this.reportLoading.set(true);
     this.reportError.set(null);
     try {
       const { downloadFacultyReport } = await import('./faculty-report');
-      await downloadFacultyReport(detail, this.summary());
+      await downloadFacultyReport(detail, this.summary(), this.feedbackSummary());
     } catch {
       this.reportError.set('Could not create the PDF report. Please try again.');
     } finally {
@@ -130,6 +150,8 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
   });
   ngOnInit(): void {}
   protected loadPeriod(periodId: string | undefined): void {
+    if (this.feedbackSummaryBusy()) return;
+    this.feedbackSummary.set(null); this.feedbackSummaryOpen.set(false); this.feedbackSummaryError.set('');
     this.request?.unsubscribe(); this.periodId.set(periodId);
     this.loading.set(true); this.errorMessage.set(null); this.summary.set(null); this.summaryOpen.set(false);
     this.summaryError.set(null); this.expandedOriginals.set(new Set());
@@ -142,6 +164,11 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
         // until Guidance explicitly reopens it from the header action.
         this.summaryOpen.set(!!detail.savedSummary);
         this.loading.set(false);
+        this.feedbackSummaryReading.set(true);
+        this.reportingService.getFeedbackSummary(this.instructorId, detail.analytics.periodId ?? periodId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: saved => { if (this.periodId() !== periodId) return; this.feedbackSummary.set(saved); this.feedbackSummaryReading.set(false); },
+          error: () => { if (this.periodId() !== periodId) return; this.feedbackSummaryReading.set(false); this.feedbackSummaryError.set('Could not load the saved feedback summary. Reopen or regenerate it to try again.'); },
+        });
       },
       error: () => {
         this.errorMessage.set('Could not load evaluation results.');

@@ -67,6 +67,14 @@ export interface GuidanceFacultySummaryDto {
   respondentCount: number;
 }
 
+export interface FeedbackSummaryDto {
+  generatedAtUtc: string;
+  studentCount: number;
+  commentCount: number;
+  themes: { summary: string; studentCount: number; commentCount: number }[];
+  isStale: boolean;
+}
+
 export interface GuidanceDepartmentPerformanceDto {
   departmentId: string;
   departmentName: string;
