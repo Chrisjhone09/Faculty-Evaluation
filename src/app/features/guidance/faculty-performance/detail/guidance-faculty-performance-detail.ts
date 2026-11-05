@@ -222,12 +222,15 @@ export class GuidanceFacultyPerformanceDetail implements OnInit {
 
   /** Renders only the saved Overall interpretation section. */
   protected formatSummary(summary: string): string {
-    const marker = '**Overall interpretation**';
-    const markerIndex = summary.indexOf(marker);
-    let visible = markerIndex >= 0 ? summary.slice(markerIndex) : summary.split(/\n\s*\n/)[0];
+    const text = summary.replace(/\r\n?/g, '\n').trim();
+    // Models and older saved summaries may use Markdown headings, bold
+    // headings, or plain text. A blank line after the title is not the end
+    // of the interpretation paragraph.
+    const title = /^(?:#{1,6}\s*)?(?:\*\*)?Overall interpretation\s*:?(?:\*\*)?\s*:?\s*$/im.exec(text);
+    let visible = title ? '**Overall interpretation**\n' + text.slice(title.index + title[0].length).trim() : text;
     const separatorIndex = visible.search(/\n\s*---\s*(?:\n|$)/);
     if (separatorIndex >= 0) visible = visible.slice(0, separatorIndex);
-    const nextSectionIndex = visible.search(/\n\s*\*\*(?:Quantitative results|Written feedback|Key strengths|Important concerns|Scale-sentiment consistency|Representative anonymous feedback|Data limitations)\*\*/i);
+    const nextSectionIndex = visible.search(/\n[ \t]*(?:#{1,6}[ \t]+|\*\*)?(?:Quantitative results|Written feedback|Key strengths|Important concerns|Scale-sentiment consistency|Representative anonymous feedback|Data limitations)(?:\*\*)?\s*:?[ \t]*(?:\n|$)/i);
     if (nextSectionIndex >= 0) visible = visible.slice(0, nextSectionIndex);
     return visible.trim()
       .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')

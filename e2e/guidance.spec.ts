@@ -112,6 +112,24 @@ test('feedback summary generates on click, reopens saved groups and exports with
   await noOverflow(page);
 });
 
+for (const heading of ['## Overall interpretation', '**Overall interpretation**', '### Overall Interpretation:']) {
+  test(`regenerated interpretation retains its paragraph after ${heading}`, async ({ page }) => {
+    await setup(page);
+    await page.route('**/api/guidance/faculty-performance/i1/summary?*', route => route.fulfill({ json: {
+      summary: `${heading}\n\nThe **weighted score of 67.51/100** and **negative written sentiment** suggest differing student experiences. Guidance should review the evidence.\n\n## Key strengths\nThis extra section should stay hidden.`,
+      generatedAtUtc: '2026-11-05T00:00:00Z', evaluationCount: 10, respondentCount: 10,
+    } }));
+    await page.goto('/guidance/faculty/i1?period=p1');
+    await page.getByRole('button', { name: 'Generate summary', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'AI Performance Summary' });
+    await expect(dialog.locator('.summary-text')).toContainText('differing student experiences');
+    await expect(dialog.locator('.summary-text strong', { hasText: 'weighted score of 67.51/100' })).toBeVisible();
+    await expect(dialog.locator('.summary-text')).not.toContainText('extra section should stay hidden');
+    await page.getByRole('button', { name: 'Regenerate summary', exact: true }).click();
+    await expect(dialog.locator('.summary-text')).toContainText('Guidance should review the evidence.');
+  });
+}
+
 test('instructor PDF downloads saved summary without an AI request', async ({ page }, info) => {
   await setup(page);
   let aiRequests = 0;
